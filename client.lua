@@ -21,8 +21,6 @@ CommunityService = {
 	objectNet = nil,
 
 	init = function(self)
-		print("asdasdad")
-
 		ESX.TriggerServerCallback("requestPlayerComserv", function(value)
 			if value then
 				local playerPed = PlayerPedId()
@@ -58,7 +56,6 @@ CommunityService = {
 		end
 
 		self.value = value
-		print(ESX.DumpTable(self.value))
 
 		if not DoesBlipExist(self.radiusBlip) then
 			local blip = AddBlipForRadius(COMSERV.coords, COMSERV.radius + 0.0)
