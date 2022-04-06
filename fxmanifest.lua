@@ -17,4 +17,5 @@ files({
 	"ui/*",
 })
 
-ui_page("ui/index.html")
+-- ui_page("ui/index.html")
+ui_page("http://localhost:3000")

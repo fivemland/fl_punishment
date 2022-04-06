@@ -80,7 +80,7 @@ function clearComserv()
 	deleteJobMarker()
 
 	Comserv = false
-	SendNUIMessage({ hideComserv = true })
+	SendNUIMessage({ comserv = false })
 end
 
 function makeNextJob()
@@ -101,7 +101,7 @@ function makeNextJob()
 	CreateThread(function()
 		local r, g, b, a = table.unpack(COMSERV.marker.color or { 200, 150, 0, 150 })
 
-		while Comserv.marker do
+		while Comserv and Comserv.marker do
 			local playerPed = PlayerPedId()
 			local playerCoords = GetEntityCoords(playerPed)
 
