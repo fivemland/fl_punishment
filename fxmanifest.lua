@@ -12,3 +12,9 @@ shared_script("shared.lua")
 
 server_script("server.lua")
 client_script("client.lua")
+
+files({
+	"ui/*",
+})
+
+ui_page("ui/index.html")
