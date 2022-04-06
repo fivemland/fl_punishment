@@ -1,6 +1,20 @@
 COMSERV = {
 	coords = vector3(168.528, -978.9825, 30.09193),
-	radius = 20,
+	radius = 10,
+
+	marker = { --task marker
+		typ = 1,
+		size = 1.5,
+		upDown = false,
+		color = { 200, 150, 0, 150 },
+	},
+
+	blip = {
+		icon = 1,
+		name = "Current Job",
+	},
+
+	model = GetHashKey("prop_tool_broom"),
 }
 
 ADMIN_RANKS = {

@@ -30,6 +30,24 @@ ESX.RegisterServerCallback("requestPlayerComserv", function(player, cb)
 	cb(getPlayerComserv(player))
 end)
 
+ESX.RegisterServerCallback("decreaseComservCount", function(player, cb)
+	local xPlayer = ESX.GetPlayerFromId(player)
+	local comserv = getPlayerComserv(player)
+
+	comserv.count = comserv.count - 1
+	if comserv.count <= 0 then
+		comserv = nil
+	end
+
+	MySQL.query("UPDATE punishments SET comserv = ? WHERE identifier = ?", {
+		json.encode(comserv),
+		xPlayer.identifier,
+	})
+
+	cb(comserv)
+	-- cb(getPlayerComserv(player))
+end)
+
 RegisterCommand("comserv", function(player, args)
 	local xPlayer = ESX.GetPlayerFromId(player)
 
