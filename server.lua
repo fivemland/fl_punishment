@@ -45,6 +45,23 @@ ESX.RegisterServerCallback("decreaseComservCount", function(player, cb)
 	cb(comserv)
 end)
 
+ESX.RegisterServerCallback("requestPunishmentUsers", function(player, cb, selectedTab)
+	local xPlayer = ESX.GetPlayerFromId(player)
+	if not xPlayer or not ADMIN_RANKS[xPlayer.getGroup()] then
+		return cb(false)
+	end
+
+	local result = MySQL.query.await("SELECT identifier, ?? FROM punishments", { selectedTab })
+
+	local newResult = {}
+
+	for _, row in pairs(result) do
+		table.insert(newResult, { identifier = row.identifier, data = json.decode(row[selectedTab]) })
+	end
+
+	cb(newResult)
+end)
+
 RegisterCommand("comserv", function(player, args)
 	local xPlayer = ESX.GetPlayerFromId(player)
 
@@ -74,6 +91,7 @@ RegisterCommand("comserv", function(player, args)
 
 	local comserv = {
 		count = count,
+		all = count,
 		reason = reason,
 		start = os.time(os.date("!*t")),
 		admin = {

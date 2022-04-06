@@ -9,13 +9,13 @@
 </script>
 
 {#if comserv && typeof comserv === 'object'}
-  <main class="bg-gray-700 p-2 rounded-xl">
+  <main class="bg-gray-700 p-2 rounded-xl select-none">
     <div class="text-center font-bold mb-2">Community Service</div>
     <table class="table table-compact">
       <tbody class="text-center">
         <tr>
           <td>Tasks Left</td>
-          <td>{comserv.count || 'Unknown'}</td>
+          <td>{comserv.count || 'Unknown'}/{comserv.all || 'Unknown'}</td>
         </tr>
         <tr>
           <td>Reason</td>
