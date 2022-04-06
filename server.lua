@@ -1,5 +1,3 @@
--- local Punishments = {}
-
 CreateThread(function()
 	MySQL.query.await([[
     CREATE TABLE IF NOT EXISTS `punishments` (
@@ -45,7 +43,6 @@ ESX.RegisterServerCallback("decreaseComservCount", function(player, cb)
 	})
 
 	cb(comserv)
-	-- cb(getPlayerComserv(player))
 end)
 
 RegisterCommand("comserv", function(player, args)
