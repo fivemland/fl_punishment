@@ -76,7 +76,7 @@ CommunityService = {
 				if distance > COMSERV.radius then
 					SetEntityCoords(playerPed, COMSERV.coords)
 					output("You cannot leave this place")
-					makeNextJob()
+					self:nextTask()
 					Wait(2500)
 				end
 
@@ -258,6 +258,20 @@ AdminPanel = {
 
 				cb({ users = users })
 			end, data.selectedTab)
+		end)
+
+		RegisterNUICallback("requestUserData", function(data, cb)
+			if not data.identifier then
+				return cb({ error = "User not found!" })
+			end
+
+			ESX.TriggerServerCallback("requestPunishmentUserData", function(error, userData)
+				if error then
+					return cb({ error = error })
+				end
+
+				cb({ userInfo = userData })
+			end, data.identifier)
 		end)
 	end,
 }

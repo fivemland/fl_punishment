@@ -1,14 +1,35 @@
+function createSQLColumn(name)
+	local p = promise.new()
+
+	local exists = MySQL.scalar.await("SHOW COLUMNS FROM `users` LIKE '" .. name .. "'")
+	if exists then
+		return p:resolve(false)
+	end
+
+	MySQL.query([[
+			ALTER TABLE `users`
+			ADD COLUMN `]] .. name .. [[` TEXT NULL DEFAULT '';
+		]], function()
+		p:resolve(true)
+	end)
+
+	return p
+end
+
 CreateThread(function()
-	MySQL.query.await([[
-    CREATE TABLE IF NOT EXISTS `punishments` (
-      `identifier` VARCHAR(64) NOT NULL DEFAULT '',
-      `comserv` TEXT NOT NULL,
-      `jail` TEXT NOT NULL,
-      `ban` TEXT NOT NULL,
-      PRIMARY KEY (`identifier`)
-    )
-    COLLATE='utf8_general_ci';
-  ]])
+	-- MySQL.query.await([[
+	--   CREATE TABLE IF NOT EXISTS `punishments` (
+	--     `identifier` VARCHAR(64) NOT NULL DEFAULT '',
+	--     `comserv` TEXT NOT NULL,
+	--     `jail` TEXT NOT NULL,
+	--     `ban` TEXT NOT NULL,
+	--     PRIMARY KEY (`identifier`)
+	--   )
+	--   COLLATE='utf8_general_ci';
+	-- ]])
+	Citizen.Await(createSQLColumn("comserv"))
+	Citizen.Await(createSQLColumn("jail"))
+	Citizen.Await(createSQLColumn("ban"))
 end)
 
 function getPlayerComserv(xPlayer)
@@ -16,7 +37,7 @@ function getPlayerComserv(xPlayer)
 		xPlayer = ESX.GetPlayerFromId(xPlayer)
 	end
 
-	local result = MySQL.query.await("SELECT comserv FROM punishments WHERE identifier = ?", { xPlayer.identifier })
+	local result = MySQL.query.await("SELECT comserv FROM users WHERE identifier = ?", { xPlayer.identifier })
 	if not result or #result < 1 then
 		return false
 	end
@@ -37,7 +58,7 @@ ESX.RegisterServerCallback("decreaseComservCount", function(player, cb)
 		comserv = nil
 	end
 
-	MySQL.query("UPDATE punishments SET comserv = ? WHERE identifier = ?", {
+	MySQL.query("UPDATE users SET comserv = ? WHERE identifier = ?", {
 		json.encode(comserv),
 		xPlayer.identifier,
 	})
@@ -51,7 +72,7 @@ ESX.RegisterServerCallback("requestPunishmentUsers", function(player, cb, select
 		return cb(false)
 	end
 
-	local result = MySQL.query.await("SELECT identifier, ?? FROM punishments", { selectedTab })
+	local result = MySQL.query.await("SELECT identifier, firstname, lastname, ?? FROM users", { selectedTab })
 
 	local newResult = {}
 
@@ -60,6 +81,22 @@ ESX.RegisterServerCallback("requestPunishmentUsers", function(player, cb, select
 	end
 
 	cb(newResult)
+end)
+
+ESX.RegisterServerCallback("requestPunishmentUserData", function(player, cb, identifier)
+	local xPlayer = ESX.GetPlayerFromId(player)
+	if not xPlayer or not ADMIN_RANKS[xPlayer.getGroup()] then
+		return cb(false)
+	end
+
+	local result = MySQL.query.await(
+		"SELECT identifier, firstname, lastname, accounts, job WHERE identifier = ?",
+		{ identifier }
+	)
+
+	print(ESX.DumpTable(result))
+
+	cb("Hiba fasz kurva")
 end)
 
 RegisterCommand("comserv", function(player, args)
@@ -100,10 +137,7 @@ RegisterCommand("comserv", function(player, args)
 		},
 	}
 
-	MySQL.insert(
-		"INSERT INTO punishments SET identifier = ?, comserv = ? ON DUPLICATE KEY UPDATE comserv = ?",
-		{ xTarget.identifier, json.encode(comserv), json.encode(comserv) }
-	)
+	MySQL.insert("UPDATE users SET comserv = ? WHERE identifier = ?", { json.encode(comserv), xTarget.identifier })
 	TriggerClientEvent("updateComserv", xTarget.source, comserv)
 
 	output("Work allocated to the player. Reason: " .. reason, player)
@@ -128,10 +162,7 @@ RegisterCommand("removecomserv", function(player, args)
 		return output("Player not in community service.", player)
 	end
 
-	exports.oxmysql:update(
-		"INSERT INTO punishments SET identifier = ? ON DUPLICATE KEY UPDATE comserv = ''",
-		{ xTarget.identifier }
-	)
+	exports.oxmysql:update("UPDATE users SET comserv = '' WHERE identifier = ?", { xTarget.identifier })
 	TriggerClientEvent("updateComserv", xTarget.source, false)
 
 	output("You remove player from community service.", player)
