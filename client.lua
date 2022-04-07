@@ -237,6 +237,10 @@ AdminPanel = {
 	end,
 
 	init = function(self)
+		RegisterNetEvent("togglePunishmentsAdmin", function()
+			self:setVisible(not self.visible)
+		end)
+
 		RegisterNUICallback("closeAdminPanel", function()
 			self:setVisible(false)
 		end)

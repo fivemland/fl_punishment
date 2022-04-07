@@ -116,8 +116,19 @@ ESX.RegisterServerCallback("requestPunishmentUserData", function(player, cb, sel
 	cb(_, result[1])
 end)
 
+RegisterCommand("punishments", function(player)
+	if not isAdmin(player) then
+		return
+	end
+
+	TriggerClientEvent("togglePunishmentsAdmin", player)
+end)
+
 RegisterCommand("comserv", function(player, args)
 	local xPlayer = ESX.GetPlayerFromId(player)
+	if not isAdmin(xPlayer) then
+		return
+	end
 
 	if #args < 3 then
 		return output("/comserv [Target Player] [Count] [Reason]", player)
@@ -164,6 +175,10 @@ RegisterCommand("comserv", function(player, args)
 end, false)
 
 RegisterCommand("removecomserv", function(player, args)
+	if not isAdmin(player) then
+		return
+	end
+
 	if #args < 1 then
 		return output("/removecomserv [Target Player]", player)
 	end

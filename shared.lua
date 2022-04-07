@@ -36,3 +36,25 @@ function output(text, target)
 		})
 	end
 end
+
+if not IsDuplicityVersion() then --Server side
+	return
+end
+
+function isAdmin(xPlayer)
+	if type(xPlayer) ~= "table" then
+		xPlayer = ESX.GetPlayerFromId(xPlayer)
+	end
+
+	if not xPlayer then
+		return false
+	end
+
+	local permissions = ADMIN_RANKS[xPlayer.getGroup()]
+
+	if not permissions then
+		output("You have not permissions!", xPlayer.source)
+	end
+
+	return permissions
+end
