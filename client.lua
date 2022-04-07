@@ -10,7 +10,6 @@ CreateThread(function()
 	CommunityService:init()
 
 	AdminPanel:init()
-	AdminPanel:setVisible(true) --TODO!
 end)
 
 CommunityService = {
@@ -112,6 +111,10 @@ CommunityService = {
 		local _, posZ = GetGroundZFor_3dCoord(posX, posY, 9999.0, true)
 
 		self.marker = vector3(posX, posY, posZ)
+
+		if DoesBlipExist(self.markerBlip) then
+			RemoveBlip(self.markerBlip)
+		end
 		self.markerBlip = AddBlipForCoord(self.marker)
 		SetBlipSprite(self.markerBlip, COMSERV.blip and COMSERV.blip.icon or 1)
 		BeginTextCommandSetBlipName("STRING")
@@ -257,8 +260,6 @@ AdminPanel = {
 			end
 
 			ESX.TriggerServerCallback("requestPunishmentUsers", function(users)
-				print("users", users)
-				print(ESX.DumpTable(users))
 				if not users then
 					return cb({ error = "User loading error!" })
 				end

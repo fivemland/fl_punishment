@@ -48,8 +48,7 @@ ESX.RegisterServerCallback("decreaseComservCount", function(player, cb)
 		comserv = nil
 	end
 
-	MySQL.query("UPDATE users SET comserv = ? WHERE identifier = ?", {
-		json.encode(comserv),
+	MySQL.query("UPDATE users SET comserv = '' WHERE identifier = ?", {
 		xPlayer.identifier,
 	})
 
@@ -58,8 +57,8 @@ end)
 
 function getPunishmentUsers(selectedTab)
 	local result = MySQL.query.await(
-		"SELECT identifier, firstname, lastname, ?? FROM users WHERE NOT ?? = ''",
-		{ selectedTab, selectedTab }
+		"SELECT identifier, firstname, lastname, ?? FROM users WHERE NOT (?? = '' OR ?? = 'null')",
+		{ selectedTab, selectedTab, selectedTab }
 	)
 
 	local newResult = {}
@@ -122,7 +121,7 @@ RegisterCommand("punishments", function(player)
 	end
 
 	TriggerClientEvent("togglePunishmentsAdmin", player)
-end)
+end, false)
 
 RegisterCommand("comserv", function(player, args)
 	local xPlayer = ESX.GetPlayerFromId(player)
@@ -140,7 +139,7 @@ RegisterCommand("comserv", function(player, args)
 	end
 
 	local count = tonumber(args[2])
-	if not count then
+	if not count or count <= 0 then
 		return output("Count is invalid!", player)
 	end
 	count = math.abs(math.floor(count))
@@ -189,7 +188,6 @@ RegisterCommand("removecomserv", function(player, args)
 	end
 
 	local comserv = getPlayerComserv(xTarget)
-	print(ESX.DumpTable(comserv))
 	if not comserv then
 		return output("Player not in community service.", player)
 	end

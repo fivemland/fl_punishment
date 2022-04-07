@@ -6,7 +6,7 @@
     { name: 'jail', label: 'Jail' },
     { name: 'ban', label: 'Ban' },
   ];
-  let visible = true;
+  let visible = false;
   let selectedTab = 'comserv';
 
   let users = [];
@@ -15,6 +15,8 @@
   $: filteredUsers = users.filter((user) => user.name.toLowerCase().includes(search.toLowerCase()));
 
   async function selectTab(name) {
+    if (selectedTab === name) return;
+
     selectedTab = name;
 
     users = [];
@@ -32,15 +34,16 @@
     users = [...responseJson.users];
   }
 
-  setTimeout(() => {
-    selectTab('comserv');
-  }, 500);
-
   window.addEventListener('message', ({ data }) => {
-    if (data.adminPanel !== undefined) visible = data.adminPanel;
+    if (data.adminPanel !== undefined) {
+      visible = data.adminPanel;
+      selectedTab = false;
+      if (visible) selectTab('comserv');
+    }
   });
 
   function close() {
+    visible = false;
     fetch(`https://${GetParentResourceName()}/closeAdminPanel`);
   }
 
@@ -99,45 +102,55 @@
         {/each}
       </div>
       <div class="mb-2">
-        <input bind:value={search} type="text" placeholder="Search" class="input input-bordered input-sm w-full" />
+        <input
+          bind:value={search}
+          disabled={users.length <= 0 || filteredUsers.length <= 0}
+          type="text"
+          placeholder="Search"
+          class="input input-bordered input-sm w-full"
+        />
       </div>
     </div>
 
     <div class="max-h-96 overflow-y-auto">
       {#if search.length > 0 && filteredUsers.length <= 0}
-        <div class="text-center text-warning text-lg mt-4">Users not found!</div>
+        <div class="text-center text-warning text-lg mt-4">
+          Search result:
+          <br />
+          Users not found!
+        </div>
       {/if}
 
-      {#if users.length <= 0}
+      {#if users.length <= 0 || filteredUsers.length <= 0}
         <div class="text-center text-warning text-lg mt-4">Users not found!</div>
+      {:else}
+        {#each filteredUsers as user}
+          {#if user}
+            <div class="grid grid-flow-col gap-2 items-center bg-slate-800 p-2 rounded-md border-b border-gray-900">
+              <div class="w-40">{user.name || 'Ismeretlen'}</div>
+              <div class="w-60 text-center">
+                <div class="tooltip tooltip-left" data-tip="Reason">
+                  {user[selectedTab].reason || 'Unknown'}
+                </div>
+              </div>
+              <div>
+                <div class="tooltip tooltip-right" data-tip="Count">
+                  {user[selectedTab].count || 0}/{user[selectedTab].all || 0}
+                </div>
+              </div>
+              <div class="ml-auto">
+                <label on:click={() => requestUserData(user)} class="btn btn-sm btn-circle btn-primary modal-button" for="info-modal">
+                  <i class="fa-solid fa-info" />
+                </label>
+
+                <button on:click={() => remove(user)} class="btn btn-sm btn-circle btn-error">
+                  <i class="fa-solid fa-trash-can" />
+                </button>
+              </div>
+            </div>
+          {/if}
+        {/each}
       {/if}
-
-      {#each filteredUsers as user}
-        {#if user}
-          <div class="grid grid-flow-col gap-2 items-center bg-slate-800 p-2 rounded-md border-b border-gray-900">
-            <div class="w-40">{user.name || 'Ismeretlen'}</div>
-            <div class="w-60 text-center">
-              <div class="tooltip tooltip-left" data-tip="Reason">
-                {user[selectedTab].reason || 'Unknown'}
-              </div>
-            </div>
-            <div>
-              <div class="tooltip tooltip-right" data-tip="Count">
-                {user[selectedTab].count || 0}/{user[selectedTab].all || 0}
-              </div>
-            </div>
-            <div class="ml-auto">
-              <label on:click={() => requestUserData(user)} class="btn btn-sm btn-circle btn-primary modal-button" for="info-modal">
-                <i class="fa-solid fa-info" />
-              </label>
-
-              <button on:click={() => remove(user)} class="btn btn-sm btn-circle btn-error">
-                <i class="fa-solid fa-trash-can" />
-              </button>
-            </div>
-          </div>
-        {/if}
-      {/each}
     </div>
   </main>
 {/if}
