@@ -242,8 +242,9 @@ AdminPanel = {
 		end)
 
 		RegisterNUICallback("removeUser", function(data, cb)
-			print(ESX.DumpTable(data))
-			cb({ users = 1 })
+			ESX.TriggerServerCallback("removeUserFromPunishment", function(users)
+				cb({ users = users })
+			end, data.selectedTab, data.identifier)
 		end)
 
 		RegisterNUICallback("requestUsers", function(data, cb)
@@ -252,6 +253,8 @@ AdminPanel = {
 			end
 
 			ESX.TriggerServerCallback("requestPunishmentUsers", function(users)
+				print("users", users)
+				print(ESX.DumpTable(users))
 				if not users then
 					return cb({ error = "User loading error!" })
 				end
@@ -271,7 +274,7 @@ AdminPanel = {
 				end
 
 				cb({ userInfo = userData })
-			end, data.identifier)
+			end, data.selectedTab, data.identifier)
 		end)
 	end,
 }

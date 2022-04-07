@@ -1,4 +1,6 @@
 <script>
+  import Loading from './Loading.svelte';
+
   const buttons = [
     { name: 'comserv', label: 'Community Service' },
     { name: 'jail', label: 'Jail' },
@@ -7,26 +9,15 @@
   let visible = true;
   let selectedTab = 'comserv';
 
-  $: activeTab = buttons.filter((button) => button.name === selectedTab)[0];
-
-  let users = [
-    { identifier: 'csokifasz', name: 'Clark fasz Melton', reason: 'Teszt', count: 10, all: 20 },
-    {
-      identifier: 'csokifasz',
-      name: 'Frank Johns',
-      reason:
-        'Tesztasdhaskldhaksldhklashkdlhask hdlkas hkashd lkashd klhaskld hakls hklashd klashkld haskl haksl hklas hklash kldhaskl dhklasd hklashd klashd klashkld haskld haklsd hkasdh klashdlk',
-      count: 10,
-      all: 20,
-    },
-  ];
-
+  let users = [];
   let search = '';
 
   $: filteredUsers = users.filter((user) => user.name.toLowerCase().includes(search.toLowerCase()));
 
   async function selectTab(name) {
     selectedTab = name;
+
+    users = [];
 
     const response = await fetch(`https://${GetParentResourceName()}/requestUsers`, {
       method: 'POST',
@@ -36,11 +27,14 @@
     });
 
     const responseJson = await response.json();
-
     if (responseJson.error) return (users = []);
 
-    users = responseJson.users;
+    users = [...responseJson.users];
   }
+
+  setTimeout(() => {
+    selectTab('comserv');
+  }, 500);
 
   window.addEventListener('message', ({ data }) => {
     if (data.adminPanel !== undefined) visible = data.adminPanel;
@@ -50,14 +44,18 @@
     fetch(`https://${GetParentResourceName()}/closeAdminPanel`);
   }
 
-  function remove(user) {
-    fetch(`https://${GetParentResourceName()}/removeUser`, {
+  async function remove(user) {
+    const response = await fetch(`https://${GetParentResourceName()}/removeUser`, {
       method: 'POST',
       body: JSON.stringify({
         selectedTab,
         identifier: user.identifier,
       }),
     });
+
+    const responseJson = await response.json();
+
+    users = responseJson.users;
   }
 
   let userInfo = false;
@@ -68,13 +66,18 @@
     const response = await fetch(`https://${GetParentResourceName()}/requestUserData`, {
       method: 'POST',
       body: JSON.stringify({
+        selectedTab,
         identifier: user.identifier,
       }),
     });
 
     const responseJson = await response.json();
 
-    console.log(responseJson);
+    if (responseJson.error) return (userInfo = responseJson.error);
+
+    userInfo = responseJson.userInfo;
+    userInfo[selectedTab] = JSON.parse(userInfo[selectedTab]);
+    userInfo.accounts = JSON.parse(userInfo.accounts);
   }
 </script>
 
@@ -105,57 +108,104 @@
         <div class="text-center text-warning text-lg mt-4">Users not found!</div>
       {/if}
 
+      {#if users.length <= 0}
+        <div class="text-center text-warning text-lg mt-4">Users not found!</div>
+      {/if}
+
       {#each filteredUsers as user}
-        <div class="grid grid-flow-col gap-2 items-center bg-slate-800 p-2 rounded-md border-b border-gray-900">
-          <div class="w-40">{user.name || 'Ismeretlen'}</div>
-          <div class="w-60 text-center">
-            <div class="tooltip tooltip-left" data-tip="Reason">
-              {user.reason || 'Unknown'}
+        {#if user}
+          <div class="grid grid-flow-col gap-2 items-center bg-slate-800 p-2 rounded-md border-b border-gray-900">
+            <div class="w-40">{user.name || 'Ismeretlen'}</div>
+            <div class="w-60 text-center">
+              <div class="tooltip tooltip-left" data-tip="Reason">
+                {user[selectedTab].reason || 'Unknown'}
+              </div>
+            </div>
+            <div>
+              <div class="tooltip tooltip-right" data-tip="Count">
+                {user[selectedTab].count || 0}/{user[selectedTab].all || 0}
+              </div>
+            </div>
+            <div class="ml-auto">
+              <label on:click={() => requestUserData(user)} class="btn btn-sm btn-circle btn-primary modal-button" for="info-modal">
+                <i class="fa-solid fa-info" />
+              </label>
+
+              <button on:click={() => remove(user)} class="btn btn-sm btn-circle btn-error">
+                <i class="fa-solid fa-trash-can" />
+              </button>
             </div>
           </div>
-          <div>
-            <div class="tooltip tooltip-right" data-tip="Count">
-              {user.count || 0}/{user.all || 0}
-            </div>
-          </div>
-          <div class="ml-auto">
-            <label on:click={() => requestUserData(user)} class="btn btn-sm btn-circle btn-primary modal-button" for="my-modal">
-              <i class="fa-solid fa-info" />
-            </label>
-
-            <button on:click={() => remove(user)} class="btn btn-sm btn-circle btn-error">
-              <i class="fa-solid fa-trash-can" />
-            </button>
-          </div>
-        </div>
-
-        <input type="checkbox" id="my-modal" class="modal-toggle" />
-        <div class="modal">
-          <div class="modal-box bg-gray-800">
-            <label for="my-modal" class="btn btn-sm btn-circle absolute right-2 top-2">✕</label>
-            <h3 class="font-bold text-lg">User Informations</h3>
-            <table class="table table-compact w-full mt-3 py-4">
-              <tbody>
-                <tr>
-                  <td>Start Date</td>
-                  <td class="text-right">1900.01.01</td>
-                </tr>
-                <tr>
-                  <td>Admin</td>
-                  <td class="text-right">Csoki</td>
-                </tr>
-                <tr>
-                  <td>Admin Identifier</td>
-                  <td class="text-right">asdasd</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        {/if}
       {/each}
     </div>
   </main>
 {/if}
+
+<input type="checkbox" id="info-modal" class="modal-toggle" />
+<div class="modal">
+  <div class="modal-box bg-gray-800">
+    <label on:click={(userInfo = false)} for="info-modal" class="btn btn-sm btn-circle absolute right-2 top-2">
+      <i class="fa-solid fa-xmark" />
+    </label>
+    <h3 class="font-bold text-lg">User Informations</h3>
+
+    {#if userInfo === undefined || userInfo === false}
+      <div class="text-center">
+        <Loading />
+      </div>
+    {:else if typeof userInfo === 'string'}
+      <div class="text-center text-error text-lg mt-3">{userInfo}</div>
+    {:else}
+      <table class="table table-compact w-full mt-3 py-4">
+        <tbody>
+          <tr>
+            <td colspan="2" class="font-bold text-center"> User Informations </td>
+          </tr>
+
+          <tr>
+            <td>Identifier</td>
+            <td class="text-right">{userInfo.identifier || 'Unknown'}</td>
+          </tr>
+          <tr>
+            <td>Character Name</td>
+            <td class="text-right">{userInfo.firstname || 'Unknown'} {userInfo.lastname || 'Unknown'}</td>
+          </tr>
+          <tr>
+            <td>Job</td>
+            <td class="text-right">{userInfo.job || 'Unknown'}</td>
+          </tr>
+          <tr>
+            <td>Money</td>
+            <td class="text-right">{userInfo.accounts.money}$</td>
+          </tr>
+          <tr>
+            <td>Bank Money</td>
+            <td class="text-right">{userInfo.accounts.bank}$</td>
+          </tr>
+          <tr>
+            <td>Dirt Money</td>
+            <td class="text-right">{userInfo.accounts.black_money}$</td>
+          </tr>
+
+          <tr>
+            <td colspan="2" class="font-bold text-center"> Punishment </td>
+          </tr>
+          {#if userInfo[selectedTab]}
+            <tr>
+              <td>Admin</td>
+              <td class="text-right">{userInfo[selectedTab].admin.name}</td>
+            </tr>
+            <tr>
+              <td>Admin Identifier</td>
+              <td class="text-right">{userInfo[selectedTab].admin.identifier}</td>
+            </tr>
+          {/if}
+        </tbody>
+      </table>
+    {/if}
+  </div>
+</div>
 
 <style>
   main {

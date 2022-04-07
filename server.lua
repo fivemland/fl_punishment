@@ -17,16 +17,6 @@ function createSQLColumn(name)
 end
 
 CreateThread(function()
-	-- MySQL.query.await([[
-	--   CREATE TABLE IF NOT EXISTS `punishments` (
-	--     `identifier` VARCHAR(64) NOT NULL DEFAULT '',
-	--     `comserv` TEXT NOT NULL,
-	--     `jail` TEXT NOT NULL,
-	--     `ban` TEXT NOT NULL,
-	--     PRIMARY KEY (`identifier`)
-	--   )
-	--   COLLATE='utf8_general_ci';
-	-- ]])
 	Citizen.Await(createSQLColumn("comserv"))
 	Citizen.Await(createSQLColumn("jail"))
 	Citizen.Await(createSQLColumn("ban"))
@@ -66,37 +56,64 @@ ESX.RegisterServerCallback("decreaseComservCount", function(player, cb)
 	cb(comserv)
 end)
 
+function getPunishmentUsers(selectedTab)
+	local result = MySQL.query.await(
+		"SELECT identifier, firstname, lastname, ?? FROM users WHERE NOT ?? = ''",
+		{ selectedTab, selectedTab }
+	)
+
+	local newResult = {}
+
+	for _, row in pairs(result) do
+		row[selectedTab] = json.decode(row[selectedTab])
+		row.name = row.firstname .. " " .. row.lastname
+		table.insert(newResult, row)
+	end
+
+	return newResult
+end
+
 ESX.RegisterServerCallback("requestPunishmentUsers", function(player, cb, selectedTab)
 	local xPlayer = ESX.GetPlayerFromId(player)
 	if not xPlayer or not ADMIN_RANKS[xPlayer.getGroup()] then
 		return cb(false)
 	end
 
-	local result = MySQL.query.await("SELECT identifier, firstname, lastname, ?? FROM users", { selectedTab })
-
-	local newResult = {}
-
-	for _, row in pairs(result) do
-		table.insert(newResult, { identifier = row.identifier, data = json.decode(row[selectedTab]) })
-	end
-
-	cb(newResult)
+	cb(getPunishmentUsers(selectedTab))
 end)
 
-ESX.RegisterServerCallback("requestPunishmentUserData", function(player, cb, identifier)
+ESX.RegisterServerCallback("removeUserFromPunishment", function(player, cb, selectedTab, identifier)
 	local xPlayer = ESX.GetPlayerFromId(player)
 	if not xPlayer or not ADMIN_RANKS[xPlayer.getGroup()] then
 		return cb(false)
 	end
 
+	MySQL.query.await("UPDATE users SET	?? = '' WHERE identifier = ?", { selectedTab, identifier })
+
+	local xTarget = ESX.GetPlayerFromIdentifier(identifier)
+	if xTarget then
+		TriggerClientEvent("updateComserv", xTarget.source, false)
+	end
+
+	cb(getPunishmentUsers(selectedTab))
+end)
+
+ESX.RegisterServerCallback("requestPunishmentUserData", function(player, cb, selectedTab, identifier)
+	local xPlayer = ESX.GetPlayerFromId(player)
+	if not xPlayer or not ADMIN_RANKS[xPlayer.getGroup()] then
+		return cb("You are not an admin!")
+	end
+
 	local result = MySQL.query.await(
-		"SELECT identifier, firstname, lastname, accounts, job WHERE identifier = ?",
-		{ identifier }
+		"SELECT identifier, firstname, lastname, accounts, job, ?? FROM users WHERE identifier = ?",
+		{ selectedTab, identifier }
 	)
 
-	print(ESX.DumpTable(result))
+	if not result or #result <= 0 then
+		return cb("User not found!")
+	end
 
-	cb("Hiba fasz kurva")
+	cb(_, result[1])
 end)
 
 RegisterCommand("comserv", function(player, args)
