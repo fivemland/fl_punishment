@@ -220,7 +220,7 @@ RegisterCommand("ban", function(player, args)
 	if not days or days < 0 then
 		return output("Days value invalid!", player)
 	end
-	days = math.floor(math.abs(days))
+	days = math.floor(days)
 
 	table.remove(args, 1)
 	table.remove(args, 1)
