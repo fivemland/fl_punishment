@@ -1,3 +1,9 @@
+CreateThread(function()
+	Citizen.Await(createSQLColumn("comserv"))
+	Citizen.Await(createSQLColumn("jail"))
+	Citizen.Await(createSQLColumn("ban"))
+end)
+
 function createSQLColumn(name)
 	local p = promise.new()
 
@@ -16,12 +22,6 @@ function createSQLColumn(name)
 	return p
 end
 
-CreateThread(function()
-	Citizen.Await(createSQLColumn("comserv"))
-	Citizen.Await(createSQLColumn("jail"))
-	Citizen.Await(createSQLColumn("ban"))
-end)
-
 function getPlayerComserv(xPlayer)
 	if type(xPlayer) ~= "table" then
 		xPlayer = ESX.GetPlayerFromId(xPlayer)
@@ -33,6 +33,23 @@ function getPlayerComserv(xPlayer)
 	end
 
 	return json.decode(result[1].comserv)
+end
+
+function getPunishmentUsers(selectedTab)
+	local result = MySQL.query.await(
+		"SELECT identifier, firstname, lastname, ?? FROM users WHERE NOT (?? = '' OR ?? = 'null')",
+		{ selectedTab, selectedTab, selectedTab }
+	)
+
+	local newResult = {}
+
+	for _, row in pairs(result) do
+		row[selectedTab] = json.decode(row[selectedTab])
+		row.name = row.firstname .. " " .. row.lastname
+		table.insert(newResult, row)
+	end
+
+	return newResult
 end
 
 ESX.RegisterServerCallback("requestPlayerComserv", function(player, cb)
@@ -54,23 +71,6 @@ ESX.RegisterServerCallback("decreaseComservCount", function(player, cb)
 
 	cb(comserv)
 end)
-
-function getPunishmentUsers(selectedTab)
-	local result = MySQL.query.await(
-		"SELECT identifier, firstname, lastname, ?? FROM users WHERE NOT (?? = '' OR ?? = 'null')",
-		{ selectedTab, selectedTab, selectedTab }
-	)
-
-	local newResult = {}
-
-	for _, row in pairs(result) do
-		row[selectedTab] = json.decode(row[selectedTab])
-		row.name = row.firstname .. " " .. row.lastname
-		table.insert(newResult, row)
-	end
-
-	return newResult
-end
 
 ESX.RegisterServerCallback("requestPunishmentUsers", function(player, cb, selectedTab)
 	local xPlayer = ESX.GetPlayerFromId(player)
