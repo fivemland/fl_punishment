@@ -1,3 +1,5 @@
+local DAY_SECONDS = 60 * 60 * 24
+
 CreateThread(function()
 	Citizen.Await(createSQLColumn("comserv"))
 	Citizen.Await(createSQLColumn("jail"))
@@ -198,3 +200,134 @@ RegisterCommand("removecomserv", function(player, args)
 	output("You remove player from community service.", player)
 	output(GetPlayerName(player) .. " has removed you from community service", xTarget.source)
 end, false)
+
+RegisterCommand("ban", function(player, args)
+	local xPlayer = ESX.GetPlayerFromId(player)
+	if not xPlayer or not isAdmin(xPlayer) then
+		return
+	end
+
+	if #args < 2 then
+		return output("/ban [Target Player] [Days (0 - Infinity)] [Reason]", player)
+	end
+
+	local xTarget = ESX.GetPlayerFromId(args[1])
+	if not xTarget then
+		return output("Player not found!", player)
+	end
+
+	local days = tonumber(args[2])
+	if not days or days < 0 then
+		return output("Days value invalid!", player)
+	end
+
+	table.remove(args, 1)
+	table.remove(args, 1)
+
+	local reason = table.concat(args, " ")
+	if reason:len() <= 0 then
+		reason = "No Reason"
+	end
+
+	local currentTimestamp = os.time(os.date("!*t"))
+	local ban = {
+		count = days,
+		start = currentTimestamp,
+		endDate = currentTimestamp + ((days == 0 and 3650 or days) * DAY_SECONDS),
+		reason = reason,
+		admin = {
+			name = GetPlayerName(player),
+			identifier = xPlayer.identifier,
+		},
+	}
+
+	MySQL.query("UPDATE users SET ban = ? WHERE identifier = ?", { json.encode(ban), xTarget.identifier })
+
+	Wait(1000)
+	DropPlayer(
+		xTarget.source,
+		"You have been banned from the server\nAdmin: " .. GetPlayerName(player) .. "\nReason: " .. reason
+	)
+end)
+
+AddEventHandler("playerConnecting", function(name, setKickReason, deferrals)
+	local player = source
+	local identifiers = GetPlayerIdentifiers(player)
+	local selectedId = false
+
+	deferrals.defer()
+	Wait(0)
+
+	for _, id in pairs(identifiers) do
+		if id:find("license:") then
+			selectedId = id:gsub("license:", "")
+			break
+		end
+	end
+
+	deferrals.update("Checking ban status...")
+
+	local result = MySQL.scalar.await("SELECT ban FROM users WHERE identifier = ?", { selectedId })
+
+	if not result or result == "" then
+		return deferrals.done()
+	end
+
+	result = json.decode(result)
+
+	local currentTimestamp = os.time(os.date("!*t"))
+
+	if result.endDate > currentTimestamp then
+		return deferrals.done(
+			"\nYou have been banned from the server\nAdmin: "
+				.. result.admin.name
+				.. "\nDays: "
+				.. (result.count == 0 and "Infinity" or result.count)
+				.. "\nEnd Date: "
+				.. os.date("%Y-%b-%d", result.endDate)
+				.. "\nReason: "
+				.. result.reason
+		)
+	else
+		Wait(1000)
+
+		deferrals.update("Ban clear.")
+
+		exports.oxmysql:update("UPDATE users SET ban = '' WHERE identifier = ?", { selectedId })
+	end
+
+	Wait(1000)
+	deferrals.done()
+end)
+
+RegisterCommand("unban", function(player, args)
+	local xPlayer = ESX.GetPlayerFromId(player)
+	if not xPlayer or not isAdmin(xPlayer) then
+		return
+	end
+
+	if #args < 1 then
+		return output("/unban [Identifier / Character Name]", player)
+	end
+
+	local input = table.concat(args, " ")
+
+	local result = MySQL.query.await(
+		"SELECT identifier, firstname, lastname, ban FROM users WHERE identifier = ? OR LOWER(CONCAT(firstname, ' ', lastname)) = ?",
+		{ input, input }
+	)
+
+	if not result or #result < 1 then
+		return output("Player not found!", player)
+	end
+
+	result = result[1]
+
+	if result.ban:len() <= 0 then
+		return output("Player not banned!", player)
+	end
+
+	exports.oxmysql:update("UPDATE users SET ban = '' WHERE identifier = ?", { result.identifier })
+
+	output("Player unbanned. Name: " .. result.firstname .. " " .. result.lastname, player)
+end)
