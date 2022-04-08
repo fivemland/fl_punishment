@@ -220,6 +220,7 @@ RegisterCommand("ban", function(player, args)
 	if not days or days < 0 then
 		return output("Days value invalid!", player)
 	end
+	days = math.floor(math.abs(days))
 
 	table.remove(args, 1)
 	table.remove(args, 1)
@@ -246,7 +247,12 @@ RegisterCommand("ban", function(player, args)
 	Wait(1000)
 	DropPlayer(
 		xTarget.source,
-		"You have been banned from the server\nAdmin: " .. GetPlayerName(player) .. "\nReason: " .. reason
+		"You have been banned from the server\nAdmin: "
+			.. GetPlayerName(player)
+			.. "\nDays:"
+			.. (days == 0 and "Infinity" or days)
+			.. "\nReason: "
+			.. reason
 	)
 end)
 
