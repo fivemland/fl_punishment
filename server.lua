@@ -287,6 +287,8 @@ AddEventHandler("playerConnecting", function(name, setKickReason, deferrals)
 				.. os.date("%Y-%b-%d", result.endDate)
 				.. "\nReason: "
 				.. result.reason
+				.. "\nIdentifier: "
+				.. selectedId
 		)
 	else
 		Wait(1000)
