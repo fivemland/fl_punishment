@@ -14,6 +14,8 @@
 
   $: filteredUsers = users.filter((user) => user.name.toLowerCase().includes(search.toLowerCase()));
 
+  $: activeTab = buttons.find((button) => button.name === selectedTab);
+
   async function selectTab(name) {
     if (selectedTab === name) return;
 
@@ -82,12 +84,16 @@
     userInfo[selectedTab] = JSON.parse(userInfo[selectedTab]);
     userInfo.accounts = JSON.parse(userInfo.accounts);
   }
+
+  function formatDate(timestamp) {
+    return new Date((timestamp || 0) * 1000).toLocaleString('en-GB');
+  }
 </script>
 
 {#if visible}
   <main class="bg-slate-700 rounded-lg w-2/5 p-2">
     <div class="flex justify-between items-center text-xl">
-      Punishments
+      {activeTab.label}s
 
       <button on:click={close} class="text-error">
         <i class="fa-solid fa-xmark" />
@@ -135,7 +141,11 @@
               </div>
               <div>
                 <div class="tooltip tooltip-right" data-tip="Count">
-                  {user[selectedTab].count || 0}/{user[selectedTab].all || 0}
+                  {#if selectedTab === 'ban'}
+                    {parseInt(user[selectedTab].count || 0) === 0 ? 'Infinity' : user[selectedTab].count + ' days'}
+                  {:else}
+                    {user[selectedTab].count || 0}/{user[selectedTab].all || 0}
+                  {/if}
                 </div>
               </div>
               <div class="ml-auto">
@@ -213,6 +223,20 @@
               <td>Admin Identifier</td>
               <td class="text-right">{userInfo[selectedTab].admin.identifier}</td>
             </tr>
+            <tr>
+              <td>Start Date</td>
+              <td class="text-right">{formatDate(userInfo[selectedTab].start)}</td>
+            </tr>
+            {#if selectedTab == 'ban'}
+              <tr>
+                <td>End Date</td>
+                <td class="text-right">{formatDate(userInfo[selectedTab].endDate)}</td>
+              </tr>
+              <tr>
+                <td>Days</td>
+                <td class="text-right">{userInfo[selectedTab].count}</td>
+              </tr>
+            {/if}
           {/if}
         </tbody>
       </table>

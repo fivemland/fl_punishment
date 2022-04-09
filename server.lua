@@ -96,6 +96,8 @@ ESX.RegisterServerCallback("removeUserFromPunishment", function(player, cb, sele
 		TriggerClientEvent("updateComserv", xTarget.source, false)
 	end
 
+	output("You removed punishment.", player)
+
 	cb(getPunishmentUsers(selectedTab))
 end)
 
@@ -244,16 +246,20 @@ RegisterCommand("ban", function(player, args)
 
 	MySQL.query("UPDATE users SET ban = ? WHERE identifier = ?", { json.encode(ban), xTarget.identifier })
 
+	output("You banned the player, " .. xTarget.getName(), player)
+	output("Days: " .. (days == 0 and "Infinity" or days), player)
+	output("Reason: " .. reason, player)
+
 	Wait(1000)
-	DropPlayer(
-		xTarget.source,
-		"You have been banned from the server\nAdmin: "
-			.. GetPlayerName(player)
-			.. "\nDays:"
-			.. (days == 0 and "Infinity" or days)
-			.. "\nReason: "
-			.. reason
-	)
+	-- DropPlayer(
+	-- 	xTarget.source,
+	-- 	"You have been banned from the server\nAdmin: "
+	-- 		.. GetPlayerName(player)
+	-- 		.. "\nDays:"
+	-- 		.. (days == 0 and "Infinity" or days)
+	-- 		.. "\nReason: "
+	-- 		.. reason
+	-- )
 end)
 
 AddEventHandler("playerConnecting", function(name, setKickReason, deferrals)
