@@ -14,8 +14,8 @@ server_script("server.lua")
 client_script("client.lua")
 
 files({
-	"ui/*",
+	"ui/dist/**",
 })
 
--- ui_page("ui/index.html")
-ui_page("http://localhost:3000")
+ui_page("ui/dist/index.html")
+-- ui_page("http://localhost:3000")
