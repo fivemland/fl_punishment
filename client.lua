@@ -10,6 +10,8 @@ CreateThread(function()
 	CommunityService:init()
 
 	AdminPanel:init()
+
+	Jail:init()
 end)
 
 CommunityService = {
@@ -284,3 +286,65 @@ AdminPanel = {
 	end,
 }
 AdminPanel.__index = AdminPanel
+
+Jail = {
+	data = false,
+
+	init = function(self)
+		-- self:addPlayer({
+		-- 	count = 10,
+		-- 	reason = "NonRP",
+		-- 	admin = {
+		-- 		name = "Csoki",
+		-- 		identifier = "CsakFideszCsakMaga",
+		-- 	},
+		-- })
+	end,
+
+	addPlayer = function(self, data)
+		self.data = data
+
+		local playerPed = PlayerPedId()
+
+		local coords = JAIL.cells[math.random(1, #JAIL.cells)]
+		self.coords = coords
+
+		print(coords)
+		print(ESX.DumpTable(self.data))
+
+		SetEntityCoords(playerPed, coords)
+
+		CreateThread(function()
+			self:distanceChecker()
+		end)
+	end,
+
+	removePlayer = function(self)
+		self.data = false
+
+		Wait(150)
+
+		SetPlayerInvincible(PlayerId(), false)
+
+		SetEntityCoords(PlayerPedId(), JAIL.outCoords)
+	end,
+
+	distanceChecker = function(self)
+		while self.data do
+			local playerPed = PlayerPedId()
+			local playerCoords = GetEntityCoords(playerPed)
+
+			local distance = #(playerCoords - self.coords)
+			print(distance, JAIL.distance)
+			if distance >= JAIL.distance then
+				SetEntityCoords(playerPed, self.coords)
+				Wait(2500)
+			end
+
+			SetPlayerInvincible(PlayerId(), true)
+
+			Wait(250)
+		end
+	end,
+}
+Jail.__index = Jail

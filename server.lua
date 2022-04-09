@@ -24,18 +24,23 @@ function createSQLColumn(name)
 	return p
 end
 
-function getPlayerComserv(xPlayer)
+function getPlayerPunishment(xPlayer, name)
+	if not (name == "comserv" or name == "jail") then
+		return false
+	end
+
 	if type(xPlayer) ~= "table" then
 		xPlayer = ESX.GetPlayerFromId(xPlayer)
 	end
 
-	local result = MySQL.query.await("SELECT comserv FROM users WHERE identifier = ?", { xPlayer.identifier })
-	if not result or #result < 1 then
+	local result = MySQL.scalar.await("SELECT ?? FROM users WHERE identifier = ?", { name, xPlayer.identifier })
+	if not result or result:len() <= 0 then
 		return false
 	end
 
-	return json.decode(result[1].comserv)
+	return json.decode(result)
 end
+exports("getPlayerPunishment", getPlayerPunishment)
 
 function getPunishmentUsers(selectedTab)
 	local result = MySQL.query.await(
@@ -55,19 +60,20 @@ function getPunishmentUsers(selectedTab)
 end
 
 ESX.RegisterServerCallback("requestPlayerComserv", function(player, cb)
-	cb(getPlayerComserv(player))
+	cb(getPlayerPunishment(player, "comserv"))
 end)
 
 ESX.RegisterServerCallback("decreaseComservCount", function(player, cb)
 	local xPlayer = ESX.GetPlayerFromId(player)
-	local comserv = getPlayerComserv(player)
+	local comserv = getPlayerPunishment(player, "comserv")
 
 	comserv.count = comserv.count - 1
 	if comserv.count <= 0 then
 		comserv = nil
 	end
 
-	MySQL.query("UPDATE users SET comserv = '' WHERE identifier = ?", {
+	MySQL.query("UPDATE users SET comserv = ? WHERE identifier = ?", {
+		json.encode(comserv),
 		xPlayer.identifier,
 	})
 
@@ -153,7 +159,7 @@ RegisterCommand("comserv", function(player, args)
 
 	local reason = table.concat(args, " ")
 
-	if getPlayerComserv(xTarget) then
+	if getPlayerPunishment(xTarget, "comserv") then
 		return output("Player is already in community service", player)
 	end
 
@@ -191,7 +197,7 @@ RegisterCommand("removecomserv", function(player, args)
 		return output("Player not found", player)
 	end
 
-	local comserv = getPlayerComserv(xTarget)
+	local comserv = getPlayerPunishment(xTarget, "comserv")
 	if not comserv then
 		return output("Player not in community service.", player)
 	end
@@ -344,4 +350,33 @@ RegisterCommand("unban", function(player, args)
 	exports.oxmysql:update("UPDATE users SET ban = '' WHERE identifier = ?", { result.identifier })
 
 	output("Player unbanned. Name: " .. result.firstname .. " " .. result.lastname, player)
-end)
+end, false)
+
+RegisterCommand("adminjail", function(player, args)
+	local xPlayer = ESX.GetPlayerFromId(player)
+	if not xPlayer or not isAdmin(xPlayer) then
+		return
+	end
+
+	if #args < 2 then
+		return output("/adminjail [Target Player] [Minutes] [Reason]", player)
+	end
+
+	local xTarget = ESX.GetPlayerFromId(args[1])
+	if not xTarget then
+		return output("Player not found", player)
+	end
+
+	local time = tonumber(args[2])
+	if not time then
+		return output("Time not a number!", player)
+	end
+	time = math.abs(math.floor(time))
+
+	table.remove(args, 1)
+	table.remove(args, 1)
+
+	local reason = table.concat(args, " ")
+
+	print(xTarget.getName(), time, reason)
+end, false)

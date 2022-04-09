@@ -17,6 +17,16 @@ COMSERV = {
 	model = GetHashKey("prop_tool_broom"),
 }
 
+JAIL = {
+	cells = {
+		vector3(460.0349, -994.5331, 24.91486),
+		vector3(459.6106, -997.8928, 24.91485),
+		vector3(459.5863, -1001.283, 24.91486),
+	},
+	outCoords = vector3(426.0047, -980.4569, 30.7098),
+	distance = 3,
+}
+
 ADMIN_RANKS = {
 	["admin"] = true,
 }
