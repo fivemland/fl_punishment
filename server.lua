@@ -251,15 +251,15 @@ RegisterCommand("ban", function(player, args)
 	output("Reason: " .. reason, player)
 
 	Wait(1000)
-	-- DropPlayer(
-	-- 	xTarget.source,
-	-- 	"You have been banned from the server\nAdmin: "
-	-- 		.. GetPlayerName(player)
-	-- 		.. "\nDays:"
-	-- 		.. (days == 0 and "Infinity" or days)
-	-- 		.. "\nReason: "
-	-- 		.. reason
-	-- )
+	DropPlayer(
+		xTarget.source,
+		"You have been banned from the server\nAdmin: "
+			.. GetPlayerName(player)
+			.. "\nDays:"
+			.. (days == 0 and "Infinity" or days)
+			.. "\nReason: "
+			.. reason
+	)
 end)
 
 AddEventHandler("playerConnecting", function(name, setKickReason, deferrals)
