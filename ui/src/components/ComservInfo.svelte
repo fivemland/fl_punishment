@@ -11,7 +11,7 @@
 </script>
 
 {#if comserv && typeof comserv === 'object'}
-  <main class="bg-gray-700 p-2 rounded-xl select-none">
+  <main id="infopanel" class="bg-gray-700 p-2 rounded-xl select-none">
     <div class="text-center font-bold mb-2">Community Service</div>
 
     <InfoBar title="Tasks Left" value={`${comserv.count || 'Unknown'}/${comserv.all || 'Unknown'}`} />
@@ -20,12 +20,3 @@
     <InfoBar title="Start Date" value={formatedDate || 'Unknown'} />
   </main>
 {/if}
-
-<style>
-  main {
-    position: absolute;
-    left: 50%;
-    bottom: 1rem;
-    transform: translateX(-50%);
-  }
-</style>

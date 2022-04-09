@@ -110,7 +110,7 @@
       <div class="mb-2">
         <input
           bind:value={search}
-          disabled={users.length <= 0 || filteredUsers.length <= 0}
+          disabled={users.length <= 0}
           type="text"
           placeholder="Search"
           class="input input-bordered input-sm w-full"
@@ -127,7 +127,7 @@
         </div>
       {/if}
 
-      {#if users.length <= 0 || filteredUsers.length <= 0}
+      {#if users.length <= 0}
         <div class="text-center text-warning text-lg mt-4">Users not found!</div>
       {:else}
         {#each filteredUsers as user}
@@ -144,7 +144,7 @@
                   {#if selectedTab === 'ban'}
                     {parseInt(user[selectedTab].count || 0) === 0 ? 'Infinity' : user[selectedTab].count + ' days'}
                   {:else}
-                    {user[selectedTab].count || 0}/{user[selectedTab].all || 0}
+                    {user[selectedTab].count || 0}/{user[selectedTab].all || 0}{selectedTab === 'jail' ? ' minutes' : ''}
                   {/if}
                 </div>
               </div>
@@ -227,7 +227,7 @@
               <td>Start Date</td>
               <td class="text-right">{formatDate(userInfo[selectedTab].start)}</td>
             </tr>
-            {#if selectedTab == 'ban'}
+            {#if selectedTab === 'ban'}
               <tr>
                 <td>End Date</td>
                 <td class="text-right">{formatDate(userInfo[selectedTab].endDate)}</td>
@@ -235,6 +235,15 @@
               <tr>
                 <td>Days</td>
                 <td class="text-right">{userInfo[selectedTab].count}</td>
+              </tr>
+            {:else if selectedTab === 'jail'}
+              <tr>
+                <td>Elapsed</td>
+                <td class="text-right">{userInfo[selectedTab].count} minutes</td>
+              </tr>
+              <tr>
+                <td>All Time</td>
+                <td class="text-right">{userInfo[selectedTab].all} minutes</td>
               </tr>
             {/if}
           {/if}

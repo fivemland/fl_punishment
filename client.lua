@@ -22,7 +22,7 @@ CommunityService = {
 	objectNet = nil,
 
 	init = function(self)
-		ESX.TriggerServerCallback("requestPlayerComserv", function(value)
+		ESX.TriggerServerCallback("requestPlayerPunishment", function(value)
 			if value then
 				local playerPed = PlayerPedId()
 				local playerCoords = GetEntityCoords(playerPed)
@@ -36,7 +36,7 @@ CommunityService = {
 			end
 
 			self:update(value)
-		end)
+		end, "comserv")
 
 		RegisterNetEvent("updateComserv", function(data)
 			self:update(data)
@@ -73,6 +73,8 @@ CommunityService = {
 				local playerPed = PlayerPedId()
 				local playerCoords = GetEntityCoords(playerPed)
 
+				SetCurrentPedWeapon(playerPed, GetHashKey("weapon_unarmed"), true)
+
 				local distance = #(COMSERV.coords - playerCoords)
 				if distance > COMSERV.radius then
 					SetEntityCoords(playerPed, COMSERV.coords)
@@ -83,6 +85,10 @@ CommunityService = {
 
 				Wait(250)
 			end
+		end)
+
+		CreateThread(function()
+			self:disabler()
 		end)
 
 		if not self.marker then
@@ -229,6 +235,14 @@ CommunityService = {
 			end)
 		end)
 	end,
+
+	disabler = function(self)
+		while self.value do
+			DisableControlAction(0, 24, true)
+			DisableControlAction(0, 25, true)
+			Wait(0)
+		end
+	end,
 }
 CommunityService.__index = CommunityService
 
@@ -289,16 +303,32 @@ AdminPanel.__index = AdminPanel
 
 Jail = {
 	data = false,
+	timer = false,
 
 	init = function(self)
-		-- self:addPlayer({
-		-- 	count = 10,
-		-- 	reason = "NonRP",
-		-- 	admin = {
-		-- 		name = "Csoki",
-		-- 		identifier = "CsakFideszCsakMaga",
-		-- 	},
-		-- })
+		RegisterNetEvent("updateAdminJail", function(data)
+			self:update(data)
+		end)
+
+		Wait(1000)
+		ESX.TriggerServerCallback("requestPlayerPunishment", function(data)
+			if data then
+				self:update(data)
+			end
+		end, "jail")
+	end,
+
+	update = function(self, data)
+		SendNUIMessage({ jail = data })
+
+		if not data then
+			return self:removePlayer()
+		end
+
+		self.data = false
+		Wait(5)
+
+		self:addPlayer(data)
 	end,
 
 	addPlayer = function(self, data)
@@ -306,16 +336,31 @@ Jail = {
 
 		local playerPed = PlayerPedId()
 
-		local coords = JAIL.cells[math.random(1, #JAIL.cells)]
-		self.coords = coords
+		if not self.coords then
+			self.coords = JAIL.cells[math.random(1, #JAIL.cells)]
+		end
 
-		print(coords)
-		print(ESX.DumpTable(self.data))
-
-		SetEntityCoords(playerPed, coords)
+		local playerCoords = GetEntityCoords(playerPed)
+		if #(playerCoords - self.coords) > JAIL.distance then
+			SetEntityCoords(playerPed, self.coords)
+		end
 
 		CreateThread(function()
 			self:distanceChecker()
+		end)
+
+		CreateThread(function()
+			self:disabler()
+		end)
+
+		CreateThread(function()
+			Wait(1000 * 60)
+
+			if Jail.data then
+				ESX.TriggerServerCallback("increaseAdminJailTime", function(data)
+					Jail:update(data)
+				end)
+			end
 		end)
 	end,
 
@@ -326,7 +371,9 @@ Jail = {
 
 		SetPlayerInvincible(PlayerId(), false)
 
-		SetEntityCoords(PlayerPedId(), JAIL.outCoords)
+		local playerPed = PlayerPedId()
+
+		SetEntityCoords(playerPed, JAIL.outCoords)
 	end,
 
 	distanceChecker = function(self)
@@ -335,15 +382,23 @@ Jail = {
 			local playerCoords = GetEntityCoords(playerPed)
 
 			local distance = #(playerCoords - self.coords)
-			print(distance, JAIL.distance)
 			if distance >= JAIL.distance then
 				SetEntityCoords(playerPed, self.coords)
 				Wait(2500)
 			end
 
 			SetPlayerInvincible(PlayerId(), true)
+			SetCurrentPedWeapon(playerPed, GetHashKey("weapon_unarmed"), true)
 
 			Wait(250)
+		end
+	end,
+
+	disabler = function(self)
+		while self.data do
+			DisableControlAction(0, 24, true)
+			DisableControlAction(0, 25, true)
+			Wait(0)
 		end
 	end,
 }

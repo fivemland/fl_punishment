@@ -59,15 +59,21 @@ function getPunishmentUsers(selectedTab)
 	return newResult
 end
 
-ESX.RegisterServerCallback("requestPlayerComserv", function(player, cb)
-	cb(getPlayerPunishment(player, "comserv"))
+ESX.RegisterServerCallback("requestPlayerPunishment", function(player, cb, name)
+	cb(getPlayerPunishment(player, name))
 end)
 
 ESX.RegisterServerCallback("decreaseComservCount", function(player, cb)
 	local xPlayer = ESX.GetPlayerFromId(player)
-	local comserv = getPlayerPunishment(player, "comserv")
+	if not xPlayer then
+		return cb(false)
+	end
+	local comserv = getPlayerPunishment(xPlayer, "comserv")
+	if not comserv then
+		return cb(false)
+	end
 
-	comserv.count = comserv.count - 1
+	comserv.count = (comserv.count or comserv.all or 0) - 1
 	if comserv.count <= 0 then
 		comserv = nil
 	end
@@ -78,6 +84,33 @@ ESX.RegisterServerCallback("decreaseComservCount", function(player, cb)
 	})
 
 	cb(comserv)
+end)
+
+ESX.RegisterServerCallback("increaseAdminJailTime", function(player, cb)
+	local xPlayer = ESX.GetPlayerFromId(player)
+	if not xPlayer then
+		return cb(false)
+	end
+
+	local jail = getPlayerPunishment(xPlayer, "jail")
+	print(ESX.DumpTable(jail))
+	if not jail then
+		return cb(false)
+	end
+
+	jail.count = (jail.count or 0) + 1
+	if jail.count >= (jail.all or 0) then
+		jail = nil
+
+		output("Admin jail is over.", player)
+	end
+
+	MySQL.query("UPDATE users SET jail = ? WHERE identifier = ?", {
+		json.encode(jail),
+		xPlayer.identifier,
+	})
+
+	cb(jail)
 end)
 
 ESX.RegisterServerCallback("requestPunishmentUsers", function(player, cb, selectedTab)
@@ -99,7 +132,11 @@ ESX.RegisterServerCallback("removeUserFromPunishment", function(player, cb, sele
 
 	local xTarget = ESX.GetPlayerFromIdentifier(identifier)
 	if xTarget then
-		TriggerClientEvent("updateComserv", xTarget.source, false)
+		if selectedTab == "comserv" then
+			TriggerClientEvent("updateComserv", xTarget.source, false)
+		elseif selectedTab == "jail" then
+			TriggerClientEvent("updateAdminJail", xTarget.source, false)
+		end
 	end
 
 	output("You removed punishment.", player)
@@ -159,8 +196,12 @@ RegisterCommand("comserv", function(player, args)
 
 	local reason = table.concat(args, " ")
 
+	if getPlayerPunishment(xTarget, "jail") then
+		return output("Player is already in admin jail!", player)
+	end
+
 	if getPlayerPunishment(xTarget, "comserv") then
-		return output("Player is already in community service", player)
+		return output("Player is already in community service!", player)
 	end
 
 	local comserv = {
@@ -261,7 +302,7 @@ RegisterCommand("ban", function(player, args)
 		xTarget.source,
 		"You have been banned from the server\nAdmin: "
 			.. GetPlayerName(player)
-			.. "\nDays:"
+			.. "\nDays: "
 			.. (days == 0 and "Infinity" or days)
 			.. "\nReason: "
 			.. reason
@@ -367,6 +408,14 @@ RegisterCommand("adminjail", function(player, args)
 		return output("Player not found", player)
 	end
 
+	if getPlayerPunishment(xTarget, "comserv") then
+		return output("Player is already in community service!", player)
+	end
+
+	if getPlayerPunishment(xTarget, "jail") then
+		return output("Player is already in admin jail!", player)
+	end
+
 	local time = tonumber(args[2])
 	if not time then
 		return output("Time not a number!", player)
@@ -378,5 +427,50 @@ RegisterCommand("adminjail", function(player, args)
 
 	local reason = table.concat(args, " ")
 
-	print(xTarget.getName(), time, reason)
+	local currentTimestamp = os.time(os.date("!*t"))
+	local jail = {
+		count = 0,
+		start = currentTimestamp,
+		all = time,
+		reason = reason,
+		admin = {
+			name = GetPlayerName(player),
+			identifier = xPlayer.identifier,
+		},
+	}
+
+	exports.oxmysql:update("UPDATE users SET jail = ? WHERE identifier = ?", { json.encode(jail), xTarget.identifier })
+
+	TriggerClientEvent("updateAdminJail", xTarget.source, jail)
+
+	output("Jail allocated to the player. Reason: " .. reason, player)
+
+	output(GetPlayerName(player) .. " has assigned you " .. count .. " minute adminjail.", xTarget.source)
+	output("Reason: " .. reason, xTarget.source)
 end, false)
+
+RegisterCommand("unjail", function(player, args)
+	local xPlayer = ESX.GetPlayerFromId(player)
+	if not xPlayer or not isAdmin(xPlayer) then
+		return
+	end
+
+	if #args < 1 then
+		return output("/unjail [Target Player]", player)
+	end
+
+	local xTarget = ESX.GetPlayerFromId(args[1])
+	if not xTarget then
+		return output("Player not found!")
+	end
+
+	if not getPlayerPunishment(xTarget, "jail") then
+		return output("Player not in admin jail!", player)
+	end
+
+	exports.oxmysql:update("UPDATE users SET jail = '' WHERE identifier = ?", { xTarget.identifier })
+	TriggerClientEvent("updateAdminJail", xTarget.source, false)
+
+	output("You remove player from adminjail.", player)
+	output(GetPlayerName(player) .. " has removed you from adminjail", xTarget.source)
+end)
