@@ -1,6 +1,6 @@
 COMSERV = {
 	coords = vector3(168.528, -978.9825, 30.09193),
-	radius = 10,
+	radius = 50,
 
 	marker = { --task marker
 		typ = 1,
