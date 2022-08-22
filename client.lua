@@ -113,7 +113,7 @@ CommunityService = {
 		Wait(1)
 
 		local playerPed = PlayerPedId()
-		local radius = COMSERV.radius * 0.7
+		local radius = math.ceil(COMSERV.radius * 0.7)
 		local posX, posY =
 			COMSERV.coords.x + math.random(-radius, radius), COMSERV.coords.y + math.random(-radius, radius)
 		local _, posZ = GetGroundZFor_3dCoord(posX, posY, 9999.0, true)
