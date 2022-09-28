@@ -388,6 +388,8 @@ Jail = {
 		local playerPed = PlayerPedId()
 
 		SetEntityCoords(playerPed, JAIL.outCoords)
+
+		SendNUIMessage({ jail = false })
 	end,
 
 	distanceChecker = function(self)
