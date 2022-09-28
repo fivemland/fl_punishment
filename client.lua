@@ -112,13 +112,13 @@ CommunityService = {
 
 		Wait(1)
 
-		local playerPed = PlayerPedId()
 		local radius = math.ceil(COMSERV.radius * 0.7)
 		local posX, posY =
-			COMSERV.coords.x + math.random(-radius, radius), COMSERV.coords.y + math.random(-radius, radius)
+        COMSERV.coords.x + math.random(-radius, radius), COMSERV.coords.y + math.random(-radius, radius)
 		local _, posZ = GetGroundZFor_3dCoord(posX, posY, 9999.0, true)
 
 		self.marker = vector3(posX, posY, posZ)
+
 
 		if DoesBlipExist(self.markerBlip) then
 			RemoveBlip(self.markerBlip)
@@ -129,8 +129,10 @@ CommunityService = {
 		AddTextComponentSubstringPlayerName(COMSERV.blip and COMSERV.blip.name or "")
 		EndTextCommandSetBlipName(self.markerBlip)
 
+
 		CreateThread(function()
 			local r, g, b, a = table.unpack(COMSERV.marker.color or { 200, 150, 0, 150 })
+			local lastTick = GetGameTimer()
 
 			while self.value and self.marker do
 				local playerPed = PlayerPedId()
@@ -144,26 +146,38 @@ CommunityService = {
 					end
 				end
 
-				DrawMarker(
-					COMSERV.marker.typ or 1,
-					self.marker,
-					vector3(0, 0, 0),
-					vector3(0, 0, 0),
-					vector3((COMSERV.marker.size or 1), (COMSERV.marker.size or 1), (COMSERV.marker.size or 1)),
-					r or 200,
-					g or 150,
-					b or 0,
-					a or 150,
-					COMSERV.marker.upDown or false,
-					true,
-					2,
-					false,
-					nil,
-					nil,
-					false
-				)
+				local currentTick = GetGameTimer()
+				if lastTick + 2000 < currentTick then 
+					local _, posZ = GetGroundZFor_3dCoord(self.marker.x, self.marker.y, 9999.0, true)
 
-				Wait(0)
+          self.marker = vector3(self.marker.x, self.marker.y, posZ)
+					SetBlipCoords(self.markerBlip, self.marker)
+					lastTick = currentTick
+				end
+				
+				if IsSphereVisible(self.marker, 0.0099999998) then
+					DrawMarker(
+						COMSERV.marker.typ or 1,
+						self.marker,
+						vector3(0, 0, 0),
+						vector3(0, 0, 0),
+						vector3((COMSERV.marker.size or 1), (COMSERV.marker.size or 1), (COMSERV.marker.size or 1)),
+						r or 200,
+						g or 150,
+						b or 0,
+						a or 150,
+						COMSERV.marker.upDown or false,
+						true,
+						2,
+						false,
+						nil,
+						nil,
+						false
+					)
+					Wait(0)
+				else 
+					Wait(250)
+				end
 			end
 		end)
 	end,
