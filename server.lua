@@ -324,10 +324,23 @@ AddEventHandler("playerConnecting", function(name, setKickReason, deferrals)
 	end
 
 	deferrals.update("Checking ban status...")
+	
+	local banQuery = MySQL.query.await("SELECT ban FROM users WHERE SUBSTRING_INDEX(identifier, ':', -1) = ?", { selectedId })
 
-	local result = MySQL.scalar.await("SELECT ban FROM users WHERE identifier = ?", { selectedId })
+	if not banQuery or #banQuery <= 0 then
+		return deferrals.done()
+	end
 
-	if not result or result == "" then
+	-- Fix multicharacter ban check
+	local result = nil
+	for _, row in pairs(banQuery) do 
+		if row.ban and row.ban ~= "" then 
+      result = row.ban
+			break
+		end
+	end
+
+	if not result then
 		return deferrals.done()
 	end
 
