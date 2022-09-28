@@ -1,18 +1,18 @@
-local self = {}
+local function initResource()
+	CommunityService:init()
+	AdminPanel:init()
+	Jail:init()
+end
 
 CreateThread(function()
-	while not ESX.IsPlayerLoaded() do
-		Wait(1)
+	if not ESX.IsPlayerLoaded() then 
+		return
 	end
 
 	Wait(500)
-
-	CommunityService:init()
-
-	AdminPanel:init()
-
-	Jail:init()
+	initResource()
 end)
+AddEventHandler("esx:playerLoaded", initResource)
 
 CommunityService = {
 	value = false,
