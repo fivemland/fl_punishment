@@ -93,7 +93,6 @@ ESX.RegisterServerCallback("increaseAdminJailTime", function(player, cb)
 	end
 
 	local jail = getPlayerPunishment(xPlayer, "jail")
-	print(ESX.DumpTable(jail))
 	if not jail then
 		return cb(false)
 	end
