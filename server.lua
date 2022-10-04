@@ -269,6 +269,40 @@ RegisterCommand("removecomserv", function(player, args)
 	output(GetPlayerName(player) .. " has removed you from community service", xTarget.source)
 end, false)
 
+function banPlayer(admin, target, days, reason)
+	admin = type(admin) == "number" or type(admin) == "string" and ESX.GetPlayerFromId(admin) or admin
+	target = type(target) == "number" or type(target) == "string" and ESX.GetPlayerFromId(target) or target
+
+	local currentTimestamp = os.time(os.date("!*t"))
+	local adminName = GetPlayerName(admin.source)
+	local ban = {
+		count = days,
+		start = currentTimestamp,
+		endDate = currentTimestamp + ((days == 0 and 3650 or days) * DAY_SECONDS),
+		reason = reason,
+		admin = {
+			name = adminName,
+			identifier = admin.identifier,
+		},
+	}
+
+	MySQL.query("UPDATE users SET ban = ? WHERE identifier = ?", { json.encode(ban), target.identifier })
+
+	Wait(1000)
+	DropPlayer(
+		target.source,
+		"You have been banned from the server\nAdmin: "
+			.. adminName
+			.. "\nDays: "
+			.. (days == 0 and "Infinity" or days)
+			.. "\nReason: "
+			.. reason
+	)
+
+	return true
+end
+exports("banPlayer", banPlayer)
+
 RegisterCommand("ban", function(player, args)
 	local xPlayer = ESX.GetPlayerFromId(player)
 	if not xPlayer or not isAdmin(xPlayer) then
@@ -298,34 +332,13 @@ RegisterCommand("ban", function(player, args)
 		reason = "No Reason"
 	end
 
-	local currentTimestamp = os.time(os.date("!*t"))
-	local ban = {
-		count = days,
-		start = currentTimestamp,
-		endDate = currentTimestamp + ((days == 0 and 3650 or days) * DAY_SECONDS),
-		reason = reason,
-		admin = {
-			name = GetPlayerName(player),
-			identifier = xPlayer.identifier,
-		},
-	}
+	local targetCharName = xTarget.getName()
 
-	MySQL.query("UPDATE users SET ban = ? WHERE identifier = ?", { json.encode(ban), xTarget.identifier })
+	banPlayer(xPlayer, xTarget, days, reason)
 
-	output("You banned the player, " .. xTarget.getName(), player)
+	output("You banned the player, " .. targetCharName, player)
 	output("Days: " .. (days == 0 and "Infinity" or days), player)
 	output("Reason: " .. reason, player)
-
-	Wait(1000)
-	DropPlayer(
-		xTarget.source,
-		"You have been banned from the server\nAdmin: "
-			.. GetPlayerName(player)
-			.. "\nDays: "
-			.. (days == 0 and "Infinity" or days)
-			.. "\nReason: "
-			.. reason
-	)
 end)
 
 AddEventHandler("playerConnecting", function(name, setKickReason, deferrals)
