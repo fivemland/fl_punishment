@@ -31,6 +31,15 @@
 getPlayerPunishment(xPlayer, name)
 ```
 
+```lua
+-- admin: xPlayer or serverId
+-- target: xPlayer or serverId
+-- days: number (0 - infinity)
+-- reason: string
+-- returns: boolean
+banPlayer(admin, target, days, reason)
+```
+
 ### Screenshots
 
 [![1](https://raw.githubusercontent.com/fivemland/fl_punishment/main/screenshots/1.png '1')](https://raw.githubusercontent.com/fivemland/fl_punishment/main/screenshots/1.png '1')
