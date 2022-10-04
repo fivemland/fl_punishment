@@ -1,11 +1,5 @@
 local DAY_SECONDS = 60 * 60 * 24
 
-CreateThread(function()
-	Citizen.Await(createSQLColumn("comserv"))
-	Citizen.Await(createSQLColumn("jail"))
-	Citizen.Await(createSQLColumn("ban"))
-end)
-
 function createSQLColumn(name)
 	local p = promise.new()
 
@@ -14,15 +8,39 @@ function createSQLColumn(name)
 		return p:resolve(false)
 	end
 
-	MySQL.query([[
+	MySQL.query(([[
 			ALTER TABLE `users`
-			ADD COLUMN `]] .. name .. [[` TEXT NULL DEFAULT '';
-		]], function()
+			ADD COLUMN %s TEXT NULL DEFAULT '';
+		]]):format(name), function()
 		p:resolve(true)
 	end)
 
 	return p
 end
+
+local function loadPlayerPunishment(player, xPlayer)
+	local result = MySQL.single.await("SELECT comserv, jail FROM users WHERE identifier = ?", { xPlayer.identifier })
+
+	for key, row in pairs(result) do 
+		row = json.decode(row)
+
+		if row then 
+			TriggerClientEvent("updatePlayerPunishment", player, key, row)
+			return
+		end
+	end
+end
+AddEventHandler("esx:playerLoaded", loadPlayerPunishment)
+
+CreateThread(function()
+	Citizen.Await(createSQLColumn("comserv"))
+	Citizen.Await(createSQLColumn("jail"))
+	Citizen.Await(createSQLColumn("ban"))
+
+	for _, xPlayer in pairs(ESX.GetExtendedPlayers()) do
+		loadPlayerPunishment(xPlayer.source, xPlayer)
+	end
+end)
 
 function getPlayerPunishment(xPlayer, name)
 	if not (name == "comserv" or name == "jail") then
@@ -132,9 +150,9 @@ ESX.RegisterServerCallback("removeUserFromPunishment", function(player, cb, sele
 	local xTarget = ESX.GetPlayerFromIdentifier(identifier)
 	if xTarget then
 		if selectedTab == "comserv" then
-			TriggerClientEvent("updateComserv", xTarget.source, false)
+			TriggerClientEvent("updatePlayerPunishment", xTarget.source, "comserv", false)
 		elseif selectedTab == "jail" then
-			TriggerClientEvent("updateAdminJail", xTarget.source, false)
+			TriggerClientEvent("updatePlayerPunishment", xTarget.source, "jail", false)
 		end
 	end
 
@@ -215,7 +233,7 @@ RegisterCommand("comserv", function(player, args)
 	}
 
 	MySQL.insert("UPDATE users SET comserv = ? WHERE identifier = ?", { json.encode(comserv), xTarget.identifier })
-	TriggerClientEvent("updateComserv", xTarget.source, comserv)
+	TriggerClientEvent("updatePlayerPunishment", xTarget.source, "comserv", comserv)
 
 	output("Work allocated to the player. Reason: " .. reason, player)
 
@@ -243,7 +261,7 @@ RegisterCommand("removecomserv", function(player, args)
 	end
 
 	exports.oxmysql:update("UPDATE users SET comserv = '' WHERE identifier = ?", { xTarget.identifier })
-	TriggerClientEvent("updateComserv", xTarget.source, false)
+	TriggerClientEvent("updatePlayerPunishment", xTarget.source, "comserv", false)
 
 	output("You remove player from community service.", player)
 	output(GetPlayerName(player) .. " has removed you from community service", xTarget.source)
@@ -453,7 +471,7 @@ RegisterCommand("adminjail", function(player, args)
 
 	exports.oxmysql:update("UPDATE users SET jail = ? WHERE identifier = ?", { json.encode(jail), xTarget.identifier })
 
-	TriggerClientEvent("updateAdminJail", xTarget.source, jail)
+	TriggerClientEvent("updatePlayerPunishment", xTarget.source, "jail", jail)
 
 	output("Jail allocated to the player. Reason: " .. reason, player)
 
@@ -481,7 +499,7 @@ RegisterCommand("unjail", function(player, args)
 	end
 
 	exports.oxmysql:update("UPDATE users SET jail = '' WHERE identifier = ?", { xTarget.identifier })
-	TriggerClientEvent("updateAdminJail", xTarget.source, false)
+	TriggerClientEvent("updatePlayerPunishment", xTarget.source, "jail", false)
 
 	output("You remove player from adminjail.", player)
 	output(GetPlayerName(player) .. " has removed you from adminjail", xTarget.source)

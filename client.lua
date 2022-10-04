@@ -1,47 +1,9 @@
-local function initResource()
-	CommunityService:init()
-	AdminPanel:init()
-	Jail:init()
-end
-
-CreateThread(function()
-	if not ESX.IsPlayerLoaded() then 
-		return
-	end
-
-	Wait(500)
-	initResource()
-end)
-AddEventHandler("esx:playerLoaded", initResource)
-
 CommunityService = {
 	value = false,
 	radiusBlip = nil,
 	markerBlip = nil,
 	marker = nil,
 	objectNet = nil,
-
-	init = function(self)
-		ESX.TriggerServerCallback("requestPlayerPunishment", function(value)
-			if value then
-				local playerPed = PlayerPedId()
-				local playerCoords = GetEntityCoords(playerPed)
-
-				local distance = #(COMSERV.coords - playerCoords)
-				if distance > COMSERV.radius then
-					SetEntityCoords(playerPed, COMSERV.coords)
-
-					Wait(2500)
-				end
-			end
-
-			self:update(value)
-		end, "comserv")
-
-		RegisterNetEvent("updateComserv", function(data)
-			self:update(data)
-		end)
-	end,
 
 	update = function(self, value)
 		if value then
@@ -69,6 +31,8 @@ CommunityService = {
 		SendNUIMessage({ comserv = self.value })
 
 		CreateThread(function()
+			local lastTick = GetGameTimer()
+
 			while self.value do
 				local playerPed = PlayerPedId()
 				local playerCoords = GetEntityCoords(playerPed)
@@ -81,6 +45,11 @@ CommunityService = {
 					output("You cannot leave this place")
 					self:nextTask()
 					Wait(2500)
+				end
+
+				if lastTick + 1000 < GetGameTimer() then 
+					SendNUIMessage({ comserv = self.value })
+					lastTick = GetGameTimer()
 				end
 
 				Wait(250)
@@ -319,19 +288,6 @@ Jail = {
 	data = false,
 	timer = false,
 
-	init = function(self)
-		RegisterNetEvent("updateAdminJail", function(data)
-			self:update(data)
-		end)
-
-		Wait(1000)
-		ESX.TriggerServerCallback("requestPlayerPunishment", function(data)
-			if data then
-				self:update(data)
-			end
-		end, "jail")
-	end,
-
 	update = function(self, data)
 		SendNUIMessage({ jail = data })
 
@@ -393,6 +349,8 @@ Jail = {
 	end,
 
 	distanceChecker = function(self)
+		local lastTick = GetGameTimer()
+
 		while self.data do
 			local playerPed = PlayerPedId()
 			local playerCoords = GetEntityCoords(playerPed)
@@ -405,6 +363,12 @@ Jail = {
 
 			SetPlayerInvincible(PlayerId(), true)
 			SetCurrentPedWeapon(playerPed, GetHashKey("weapon_unarmed"), true)
+
+
+			if lastTick + 1000 < GetGameTimer() then 
+				SendNUIMessage({ jail = self.data })
+				lastTick = GetGameTimer()
+			end
 
 			Wait(250)
 		end
@@ -419,3 +383,23 @@ Jail = {
 	end,
 }
 Jail.__index = Jail
+
+RegisterNetEvent("updatePlayerPunishment", function(name, data)
+	if name == "comserv" then 
+		if data then
+			local playerPed = PlayerPedId()
+			local playerCoords = GetEntityCoords(playerPed)
+
+			local distance = #(COMSERV.coords - playerCoords)
+			if distance > COMSERV.radius then
+				SetEntityCoords(playerPed, COMSERV.coords)
+
+				Wait(2500)
+			end
+		end
+
+		CommunityService:update(data)
+	elseif name == "jail" then 
+		Jail:update(data)
+	end
+end)
