@@ -288,7 +288,12 @@ Jail = {
 	data = false,
 	timer = false,
 
-	update = function(self, data)
+	update = function(self, data, isLogin)
+		if isLogin then 
+			SendNUIMessage({ jail = false })
+			return
+		end
+
 		SendNUIMessage({ jail = data })
 
 		if not data then
@@ -385,6 +390,12 @@ Jail = {
 Jail.__index = Jail
 
 RegisterNetEvent("updatePlayerPunishment", function(name, data)
+	if name == "clear" then 
+		CommunityService:update(false)
+		Jail:update(false, true)
+		return
+	end
+
 	if name == "comserv" then 
 		if data then
 			local playerPed = PlayerPedId()

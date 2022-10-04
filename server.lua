@@ -29,6 +29,8 @@ local function loadPlayerPunishment(player, xPlayer)
 			return
 		end
 	end
+	
+	TriggerClientEvent("updatePlayerPunishment", player, "clear")
 end
 AddEventHandler("esx:playerLoaded", loadPlayerPunishment)
 
