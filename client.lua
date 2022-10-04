@@ -403,3 +403,35 @@ RegisterNetEvent("updatePlayerPunishment", function(name, data)
 		Jail:update(data)
 	end
 end)
+
+-- Add chat suggestions
+CreateThread(function()
+	TriggerEvent('chat:addSuggestion', '/punishments', 'Open Punishment List (Comserv, Jail, Ban)')
+
+	TriggerEvent('chat:addSuggestion', '/comserv', 'Put player to community service', {
+    { name = "id", help = "Target Player ID" },
+    { name = "count", help = "Tasks Count" },
+    { name = "reason", help = "Reason" },
+	})
+	TriggerEvent('chat:addSuggestion', '/removecomserv', 'Remove player from community service', {
+    { name = "id", help = "Target Player ID" },
+	})
+
+	TriggerEvent('chat:addSuggestion', '/ban', 'Ban Player', {
+    { name = "id", help = "Target Player ID" },
+    { name = "days", help = "Days (0 - Infinity)" },
+    { name = "reason", help = "Reason" },
+	})
+	TriggerEvent('chat:addSuggestion', '/unban', 'Remove player ban', {
+    { name = "name", help = "Identifier / Character Name" },
+	})
+
+	TriggerEvent('chat:addSuggestion', '/adminjail', 'Put player to jail', {
+    { name = "id", help = "Target Player ID" },
+    { name = "minutes", help = "Minutes" },
+    { name = "reason", help = "Reason" },
+	})
+	TriggerEvent('chat:addSuggestion', '/unjail', 'Remove player from jail', {
+    { name = "id", help = "Target Player ID" },
+	})
+end)
