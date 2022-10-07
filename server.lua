@@ -270,8 +270,8 @@ RegisterCommand("removecomserv", function(player, args)
 end, false)
 
 function banPlayer(admin, target, days, reason)
-	admin = type(admin) == "number" or type(admin) == "string" and ESX.GetPlayerFromId(admin) or admin
-	target = type(target) == "number" or type(target) == "string" and ESX.GetPlayerFromId(target) or target
+	admin = (type(admin) == "number" or type(admin) == "string") and ESX.GetPlayerFromId(admin) or admin
+	target = (type(target) == "number" or type(target) == "string") and ESX.GetPlayerFromId(target) or target
 
 	if not isAdmin(admin) then 
 		print(("%s try ban player %s"):format(admin.getName(), target.getName()))
