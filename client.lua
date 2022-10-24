@@ -417,6 +417,8 @@ end)
 
 -- Add chat suggestions
 CreateThread(function()
+	AdminPanel:init()
+	
 	TriggerEvent('chat:addSuggestion', '/punishments', 'Open Punishment List (Comserv, Jail, Ban)')
 
 	TriggerEvent('chat:addSuggestion', '/comserv', 'Put player to community service', {
