@@ -1,6 +1,6 @@
 local DAY_SECONDS = 60 * 60 * 24
 
-function createSQLColumn(name)
+local function createSQLColumn(name)
 	local p = promise.new()
 
 	local exists = MySQL.scalar.await("SHOW COLUMNS FROM `users` LIKE '" .. name .. "'")
@@ -33,6 +33,25 @@ local function loadPlayerPunishment(player, xPlayer)
 	TriggerClientEvent("updatePlayerPunishment", player, "clear")
 end
 AddEventHandler("esx:playerLoaded", loadPlayerPunishment)
+
+local function sendToDiscord(title, message, color)
+	if not WEBHOOK or WEBHOOK:len() <= 0 then
+		return
+	end
+
+	local embeds = {
+		{
+        ["color"] = color,
+        ["title"] = "**".. title .."**\n",
+        ["description"] = message,
+        ["footer"] = {
+          ["text"] = "fl_punishment by FiveM Land",
+        },
+		}
+	}
+
+	PerformHttpRequest(WEBHOOK, function() end, 'POST', json.encode({ embeds = embeds }), { ['Content-Type'] = 'application/json' })
+end
 
 CreateThread(function()
 	Citizen.Await(createSQLColumn("comserv"))
@@ -223,13 +242,14 @@ RegisterCommand("comserv", function(player, args)
 		return output("Player is already in community service!", player)
 	end
 
+	local adminName = GetPlayerName(player)
 	local comserv = {
 		count = count,
 		all = count,
 		reason = reason,
 		start = os.time(os.date("!*t")),
 		admin = {
-			name = GetPlayerName(player),
+			name = adminName,
 			identifier = xPlayer.identifier,
 		},
 	}
@@ -239,8 +259,19 @@ RegisterCommand("comserv", function(player, args)
 
 	output("Work allocated to the player. Reason: " .. reason, player)
 
-	output(GetPlayerName(player) .. " has assigned you " .. count .. " community service assignment.", xTarget.source)
+
+	output(adminName .. " has assigned you " .. count .. " community service assignment.", xTarget.source)
 	output("Reason: " .. reason, xTarget.source)
+
+	sendToDiscord(
+		"comserv", 
+		([[
+			**%s** allocated **%s** *(%s)* to comunity service
+			Count: **%s**
+			Reason: **%s**
+		]]):format(adminName, GetPlayerName(xTarget.source), xTarget.getName(), count, reason)
+		, 15105570
+	)
 end, false)
 
 RegisterCommand("removecomserv", function(player, args)
@@ -265,8 +296,19 @@ RegisterCommand("removecomserv", function(player, args)
 	exports.oxmysql:update("UPDATE users SET comserv = '' WHERE identifier = ?", { xTarget.identifier })
 	TriggerClientEvent("updatePlayerPunishment", xTarget.source, "comserv", false)
 
+	local adminName = GetPlayerName(player)
+
 	output("You remove player from community service.", player)
-	output(GetPlayerName(player) .. " has removed you from community service", xTarget.source)
+	output(adminName .. " has removed you from community service", xTarget.source)
+
+	sendToDiscord(
+		"removecomserv", 
+		([[
+			**%s** removed **%s** *(%s)* from comunity service
+		]]):format(adminName, GetPlayerName(xTarget.source), xTarget.getName())
+		, 15105570
+	)
+
 end, false)
 
 function banPlayer(admin, target, days, reason)
@@ -290,6 +332,17 @@ function banPlayer(admin, target, days, reason)
 			identifier = admin.identifier,
 		},
 	}
+
+	sendToDiscord(
+	"ban", 
+		([[
+			**%s** banned **%s** *(%s)*
+			Identifier: **%s**
+			Days: **%s**
+			Reason: **%s**
+		]]):format(adminName, GetPlayerName(target.source), target.getName(), target.identifier, days == 0 and "Infinity" or days, reason)
+		, 15105570
+	)
 
 	MySQL.query("UPDATE users SET ban = ? WHERE identifier = ?", { json.encode(ban), target.identifier })
 
@@ -441,6 +494,15 @@ RegisterCommand("unban", function(player, args)
 	exports.oxmysql:update("UPDATE users SET ban = '' WHERE identifier = ?", { result.identifier })
 
 	output("Player unbanned. Name: " .. result.firstname .. " " .. result.lastname, player)
+
+	sendToDiscord(
+		"unban", 
+		([[
+			**%s** removed **%s** ban
+			Identifier: **%s**
+		]]):format(GetPlayerName(player), result.firstname .. " " .. result.lastname, result.identifier)
+		, 15105570
+	)
 end, false)
 
 RegisterCommand("adminjail", function(player, args)
@@ -476,7 +538,7 @@ RegisterCommand("adminjail", function(player, args)
 	table.remove(args, 1)
 
 	local reason = table.concat(args, " ")
-
+	local adminName = GetPlayerName(player)
 	local currentTimestamp = os.time(os.date("!*t"))
 	local jail = {
 		count = 0,
@@ -484,7 +546,7 @@ RegisterCommand("adminjail", function(player, args)
 		all = time,
 		reason = reason,
 		admin = {
-			name = GetPlayerName(player),
+			name = adminName,
 			identifier = xPlayer.identifier,
 		},
 	}
@@ -495,8 +557,18 @@ RegisterCommand("adminjail", function(player, args)
 
 	output("Jail allocated to the player. Reason: " .. reason, player)
 
-	output(GetPlayerName(player) .. " has assigned you " .. count .. " minute adminjail.", xTarget.source)
+	output(adminName .. " has assigned you " .. time .. " minute adminjail.", xTarget.source)
 	output("Reason: " .. reason, xTarget.source)
+
+	sendToDiscord(
+		"adminjail", 
+		([[
+			**%s** allocated **%s** *(%s)* to adminjail
+			Time: **%s** minutes
+			Reason: **%s**
+		]]):format(adminName, GetPlayerName(xTarget.source), xTarget.getName(), time, reason)
+		, 15105570
+	)
 end, false)
 
 RegisterCommand("unjail", function(player, args)
@@ -518,9 +590,20 @@ RegisterCommand("unjail", function(player, args)
 		return output("Player not in admin jail!", player)
 	end
 
+	local adminName = GetPlayerName(player)
+
 	exports.oxmysql:update("UPDATE users SET jail = '' WHERE identifier = ?", { xTarget.identifier })
 	TriggerClientEvent("updatePlayerPunishment", xTarget.source, "jail", false)
 
 	output("You remove player from adminjail.", player)
-	output(GetPlayerName(player) .. " has removed you from adminjail", xTarget.source)
+	output(adminName .. " has removed you from adminjail", xTarget.source)
+
+	sendToDiscord(
+		"unjail", 
+		([[
+			**%s** removed **%s** *(%s)* from admin jail
+		]]):format(adminName, GetPlayerName(xTarget.source), xTarget.getName())
+		, 15105570
+	)
+
 end)

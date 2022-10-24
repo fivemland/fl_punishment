@@ -31,6 +31,9 @@ ADMIN_RANKS = {
 	["admin"] = true,
 }
 
+-- WEBHOOK = false --discord log is disabled
+WEBHOOK = "" --your webhook here
+
 function output(text, target)
 	if IsDuplicityVersion() then --Server Side
 		TriggerClientEvent("chat:addMessage", target or -1, {
