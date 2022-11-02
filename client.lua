@@ -167,6 +167,7 @@ CommunityService = {
 
 		local object = CreateObject(COMSERV.model, playerCoords - vector3(0, 0, 3), true, true, true)
 		self.objectNet = ObjToNet(object)
+		FreezeEntityPosition(PlayerPedId(), true)
 
 		ESX.Streaming.RequestAnimDict("amb@world_human_janitor@male@idle_a", function()
 			TaskPlayAnim(
@@ -212,6 +213,7 @@ CommunityService = {
 			DeleteEntity(object)
 			self.objectNet = nil
 			ClearPedTasks(PlayerPedId())
+			FreezeEntityPosition(PlayerPedId(), false)
 
 			ESX.TriggerServerCallback("decreaseComservCount", function(value)
 				CommunityService:update(value)
