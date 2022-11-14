@@ -7,6 +7,7 @@
     "serve": "vite preview"
   },
   "devDependencies": {
+    "@rollup/plugin-json": "^5.0.1",
     "@sveltejs/vite-plugin-svelte": "*",
     "@vitejs/plugin-vue": "^2.2.4",
     "autoprefixer": "^10.4.2",
@@ -15,5 +16,8 @@
     "svelte": "^3.46.4",
     "tailwindcss": "^3.0.23",
     "vite": "^2.8.6"
+  },
+  "dependencies": {
+    "svelte-i18n": "^3.4.0"
   }
 }
