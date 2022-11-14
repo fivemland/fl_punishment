@@ -10,7 +10,7 @@ local function createSQLColumn(name)
 
 	MySQL.query(([[
 			ALTER TABLE `users`
-			ADD COLUMN %s TEXT NULL DEFAULT '';
+			ADD COLUMN %s TEXT NULL DEFAULT "";
 		]]):format(name), function()
 		p:resolve(true)
 	end)
@@ -50,7 +50,7 @@ local function sendToDiscord(title, message, color)
 		}
 	}
 
-	PerformHttpRequest(WEBHOOK, function() end, 'POST', json.encode({ embeds = embeds }), { ['Content-Type'] = 'application/json' })
+	PerformHttpRequest(WEBHOOK, function() end, "POST", json.encode({ embeds = embeds }), { ["Content-Type"] = "application/json" })
 end
 
 CreateThread(function()
@@ -215,12 +215,12 @@ RegisterCommand("comserv", function(player, args)
 	end
 
 	if #args < 3 then
-		return output("/comserv [Target Player] [Count] [Reason]", player)
+		return output(Translate('invalid_syntax'), player)
 	end
 
 	local xTarget = ESX.GetPlayerFromId(args[1])
 	if not xTarget then
-		return output("Player not found", player)
+		return output(Translate("user_not_found"), player)
 	end
 
 	local count = tonumber(args[2])
@@ -235,11 +235,11 @@ RegisterCommand("comserv", function(player, args)
 	local reason = table.concat(args, " ")
 
 	if getPlayerPunishment(xTarget, "jail") then
-		return output("Player is already in admin jail!", player)
+		return output(Translate("player_in_jail"), player)
 	end
 
 	if getPlayerPunishment(xTarget, "comserv") then
-		return output("Player is already in community service!", player)
+		return output(Translate("player_in_comserv"), player)
 	end
 
 	local adminName = GetPlayerName(player)
@@ -257,19 +257,14 @@ RegisterCommand("comserv", function(player, args)
 	MySQL.insert("UPDATE users SET comserv = ? WHERE identifier = ?", { json.encode(comserv), xTarget.identifier })
 	TriggerClientEvent("updatePlayerPunishment", xTarget.source, "comserv", comserv)
 
-	output("Work allocated to the player. Reason: " .. reason, player)
+	output(Translate("work_allocated", reason), player)
 
-
-	output(adminName .. " has assigned you " .. count .. " community service assignment.", xTarget.source)
-	output("Reason: " .. reason, xTarget.source)
+	output(Translate("assigned_you", adminName, count), xTarget.source)
+	output(Translate("reason", reason), xTarget.source)
 
 	sendToDiscord(
 		"comserv", 
-		([[
-			**%s** allocated **%s** *(%s)* to comunity service
-			Count: **%s**
-			Reason: **%s**
-		]]):format(adminName, GetPlayerName(xTarget.source), xTarget.getName(), count, reason)
+		Translate("comserv_log", adminName, GetPlayerName(xTarget.source), xTarget.getName(), count, reason)
 		, 15105570
 	)
 end, false)
@@ -280,17 +275,17 @@ RegisterCommand("removecomserv", function(player, args)
 	end
 
 	if #args < 1 then
-		return output("/removecomserv [Target Player]", player)
+		return output(Translate("invalid_syntax"), player)
 	end
 
 	local xTarget = ESX.GetPlayerFromId(args[1])
 	if not xTarget then
-		return output("Player not found", player)
+		return output(Translate("user_not_found"), player)
 	end
 
 	local comserv = getPlayerPunishment(xTarget, "comserv")
 	if not comserv then
-		return output("Player not in community service.", player)
+		return output(Translate("player_not_in_comserv"), player)
 	end
 
 	exports.oxmysql:update("UPDATE users SET comserv = '' WHERE identifier = ?", { xTarget.identifier })
@@ -298,14 +293,12 @@ RegisterCommand("removecomserv", function(player, args)
 
 	local adminName = GetPlayerName(player)
 
-	output("You remove player from community service.", player)
-	output(adminName .. " has removed you from community service", xTarget.source)
+	output(Translate("removed_from_comserv"), player)
+	output(Translate("removed_you_comserv", adminName), xTarget.source)
 
 	sendToDiscord(
 		"removecomserv", 
-		([[
-			**%s** removed **%s** *(%s)* from comunity service
-		]]):format(adminName, GetPlayerName(xTarget.source), xTarget.getName())
+		Translate("removecomserv_log", adminName, GetPlayerName(xTarget.source), xTarget.getName())
 		, 15105570
 	)
 
@@ -335,12 +328,7 @@ function banPlayer(admin, target, days, reason)
 
 	sendToDiscord(
 	"ban", 
-		([[
-			**%s** banned **%s** *(%s)*
-			Identifier: **%s**
-			Days: **%s**
-			Reason: **%s**
-		]]):format(adminName, GetPlayerName(target.source), target.getName(), target.identifier, days == 0 and "Infinity" or days, reason)
+		Translate("ban_log", adminName, GetPlayerName(target.source), target.getName(), target.identifier, days == 0 and "Infinity" or days, reason)
 		, 15105570
 	)
 
@@ -349,12 +337,7 @@ function banPlayer(admin, target, days, reason)
 	Wait(1000)
 	DropPlayer(
 		target.source,
-		"You have been banned from the server\nAdmin: "
-			.. adminName
-			.. "\nDays: "
-			.. (days == 0 and "Infinity" or days)
-			.. "\nReason: "
-			.. reason
+		Translate("ban_message", adminName, days == 0 and Translate("infinity") or days, reason)
 	)
 
 	return true
@@ -368,17 +351,17 @@ RegisterCommand("ban", function(player, args)
 	end
 
 	if #args < 2 then
-		return output("/ban [Target Player] [Days (0 - Infinity)] [Reason]", player)
+		return output(Translate("invalid_syntax"), player)
 	end
 
 	local xTarget = ESX.GetPlayerFromId(args[1])
 	if not xTarget then
-		return output("Player not found!", player)
+		return output(Translate("user_not_found"), player)
 	end
 
 	local days = tonumber(args[2])
 	if not days or days < 0 then
-		return output("Days value invalid!", player)
+		return output(Translate("invalid_days"), player)
 	end
 	days = math.floor(days)
 
@@ -387,16 +370,16 @@ RegisterCommand("ban", function(player, args)
 
 	local reason = table.concat(args, " ")
 	if reason:len() <= 0 then
-		reason = "No Reason"
+		reason = Translate("no_reason")
 	end
 
 	local targetCharName = xTarget.getName()
 
 	banPlayer(xPlayer, xTarget, days, reason)
 
-	output("You banned the player, " .. targetCharName, player)
-	output("Days: " .. (days == 0 and "Infinity" or days), player)
-	output("Reason: " .. reason, player)
+	output(Translate("you_banned", targetCharName), player)
+	output(Translate("days", days == 0 and Translate("infinity") or days), player)
+	output(Translate("reason", reason), player)
 end)
 
 AddEventHandler("playerConnecting", function(name, setKickReason, deferrals)
@@ -414,7 +397,7 @@ AddEventHandler("playerConnecting", function(name, setKickReason, deferrals)
 		end
 	end
 
-	deferrals.update("Checking ban status...")
+	deferrals.update(Translate("checking_ban"))
 	
 	local banQuery = MySQL.query.await("SELECT ban FROM users WHERE SUBSTRING_INDEX(identifier, ':', -1) = ?", { selectedId })
 
@@ -441,21 +424,18 @@ AddEventHandler("playerConnecting", function(name, setKickReason, deferrals)
 
 	if result.endDate > currentTimestamp then
 		return deferrals.done(
-			"\nYou have been banned from the server\nAdmin: "
-				.. result.admin.name
-				.. "\nDays: "
-				.. (result.count == 0 and "Infinity" or result.count)
-				.. "\nEnd Date: "
-				.. os.date("%Y-%b-%d", result.endDate)
-				.. "\nReason: "
-				.. result.reason
-				.. "\nIdentifier: "
-				.. selectedId
+			Translate("you_banned_from_server", 
+				result.admin.name, 
+				(result.count == 0 and Translate("infinity") or result.count),
+				os.date("%Y-%b-%d", result.endDate),
+				result.reason,
+				selectedId
+			)
 		)
 	else
 		Wait(1000)
 
-		deferrals.update("Ban clear.")
+		deferrals.update(Translate("ban_clear"))
 
 		exports.oxmysql:update("UPDATE users SET ban = '' WHERE identifier = ?", { selectedId })
 	end
@@ -471,7 +451,7 @@ RegisterCommand("unban", function(player, args)
 	end
 
 	if #args < 1 then
-		return output("/unban [Identifier / Character Name]", player)
+		return output(Translate("invalid_syntax"), player)
 	end
 
 	local input = table.concat(args, " ")
@@ -482,25 +462,24 @@ RegisterCommand("unban", function(player, args)
 	)
 
 	if not result or #result < 1 then
-		return output("Player not found!", player)
+		return output(Translate("user_not_found"), player)
 	end
 
 	result = result[1]
 
 	if result.ban:len() <= 0 then
-		return output("Player not banned!", player)
+		return output(Translate("player_not_banned"), player)
 	end
 
 	exports.oxmysql:update("UPDATE users SET ban = '' WHERE identifier = ?", { result.identifier })
 
-	output("Player unbanned. Name: " .. result.firstname .. " " .. result.lastname, player)
+	local charName = result.firstname .. " " .. result.lastname
+
+	output(Translate("player_unbanned", charName), player)
 
 	sendToDiscord(
 		"unban", 
-		([[
-			**%s** removed **%s** ban
-			Identifier: **%s**
-		]]):format(GetPlayerName(player), result.firstname .. " " .. result.lastname, result.identifier)
+		Translate("unban_log", GetPlayerName(player), charName, result.identifier)
 		, 15105570
 	)
 end, false)
@@ -512,25 +491,25 @@ RegisterCommand("adminjail", function(player, args)
 	end
 
 	if #args < 2 then
-		return output("/adminjail [Target Player] [Minutes] [Reason]", player)
+		return output(Translate("invalid_syntax"), player)
 	end
 
 	local xTarget = ESX.GetPlayerFromId(args[1])
 	if not xTarget then
-		return output("Player not found", player)
+		return output(Translate("user_not_found"), player)
 	end
 
 	if getPlayerPunishment(xTarget, "comserv") then
-		return output("Player is already in community service!", player)
+		return output(Translate("player_in_comserv"), player)
 	end
 
 	if getPlayerPunishment(xTarget, "jail") then
-		return output("Player is already in admin jail!", player)
+		return output(Translate("player_in_jail"), player)
 	end
 
 	local time = tonumber(args[2])
 	if not time then
-		return output("Time not a number!", player)
+		return output(Translate("time_not_number"), player)
 	end
 	time = math.abs(math.floor(time))
 
@@ -555,18 +534,14 @@ RegisterCommand("adminjail", function(player, args)
 
 	TriggerClientEvent("updatePlayerPunishment", xTarget.source, "jail", jail)
 
-	output("Jail allocated to the player. Reason: " .. reason, player)
+	output(Translate("jail_allocated", reason), player)
 
-	output(adminName .. " has assigned you " .. time .. " minute adminjail.", xTarget.source)
-	output("Reason: " .. reason, xTarget.source)
+	output(Translate("jail_assigned", adminName, time), xTarget.source)
+	output(Translate("reason", reason), xTarget.source)
 
 	sendToDiscord(
 		"adminjail", 
-		([[
-			**%s** allocated **%s** *(%s)* to adminjail
-			Time: **%s** minutes
-			Reason: **%s**
-		]]):format(adminName, GetPlayerName(xTarget.source), xTarget.getName(), time, reason)
+		Translate("adminjail_log", adminName, GetPlayerName(xTarget.source), xTarget.getName(), time, reason)
 		, 15105570
 	)
 end, false)
@@ -578,16 +553,16 @@ RegisterCommand("unjail", function(player, args)
 	end
 
 	if #args < 1 then
-		return output("/unjail [Target Player]", player)
+		return output(Translate("invalid_syntax"), player)
 	end
 
 	local xTarget = ESX.GetPlayerFromId(args[1])
 	if not xTarget then
-		return output("Player not found!")
+		return output(Translate("user_not_found"))
 	end
 
 	if not getPlayerPunishment(xTarget, "jail") then
-		return output("Player not in admin jail!", player)
+		return output(Translate("player_not_in_jail"), player)
 	end
 
 	local adminName = GetPlayerName(player)
@@ -595,14 +570,12 @@ RegisterCommand("unjail", function(player, args)
 	exports.oxmysql:update("UPDATE users SET jail = '' WHERE identifier = ?", { xTarget.identifier })
 	TriggerClientEvent("updatePlayerPunishment", xTarget.source, "jail", false)
 
-	output("You remove player from adminjail.", player)
-	output(adminName .. " has removed you from adminjail", xTarget.source)
+	output(Translate("you_remove_jail"), player)
+	output(Translate("removed_from_jail", adminName), xTarget.source)
 
 	sendToDiscord(
 		"unjail", 
-		([[
-			**%s** removed **%s** *(%s)* from admin jail
-		]]):format(adminName, GetPlayerName(xTarget.source), xTarget.getName())
+		Translate("unjail_log", adminName, GetPlayerName(xTarget.source), xTarget.getName())
 		, 15105570
 	)
 

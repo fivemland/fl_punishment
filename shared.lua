@@ -1,4 +1,7 @@
-LOCALE = GetConvar('esx:locale', 'en')
+Config = {
+	Locale = GetConvar("esx:locale", "hu")
+}
+if not Translate then Translate = _ end
 
 COMSERV = {
 	coords = vector3(168.528, -978.9825, 30.09193),
@@ -34,7 +37,7 @@ ADMIN_RANKS = {
 }
 
 -- WEBHOOK = false --discord log is disabled
-WEBHOOK = "" --your webhook here
+WEBHOOK = "https://discord.com/api/webhooks/1041807336072806530/qapBJDXwITlVQO_sPfQbo2qlbLX3o9bFhsDd-KhWB1YTeJ0IVIM53LVAYzDn7YFQlnzG" --your webhook here
 
 function output(text, target)
 	if IsDuplicityVersion() then --Server Side

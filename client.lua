@@ -1,5 +1,5 @@
 RegisterNUICallback("getLocale", function(_, cb)
-	cb({locale = LOCALE})
+	cb({locale = Config.Locale})
 end)
 
 CommunityService = {
@@ -46,7 +46,7 @@ CommunityService = {
 				local distance = #(COMSERV.coords - playerCoords)
 				if distance > COMSERV.radius then
 					SetEntityCoords(playerPed, COMSERV.coords)
-					output("You cannot leave this place")
+					output(Translate("cannot_leave"))
 					self:nextTask()
 					Wait(2500)
 				end
@@ -113,7 +113,7 @@ CommunityService = {
 
 				local distance = #(playerCoords - self.marker)
 				if distance <= (COMSERV.marker.size or 1) then
-					ESX.ShowHelpNotification("Press ~INPUT_CONTEXT~ to start work")
+					ESX.ShowHelpNotification(Translate("work_help"))
 					if IsControlJustPressed(0, 38) then
 						self:startTaskProcess()
 					end
@@ -171,7 +171,7 @@ CommunityService = {
 
 		local object = CreateObject(COMSERV.model, playerCoords - vector3(0, 0, 3), true, true, true)
 		self.objectNet = ObjToNet(object)
-		FreezeEntityPosition(PlayerPedId(), true)
+		FreezeEntityPosition(playerPed, true)
 
 		ESX.Streaming.RequestAnimDict("amb@world_human_janitor@male@idle_a", function()
 			TaskPlayAnim(
@@ -216,8 +216,9 @@ CommunityService = {
 			DetachEntity(object, true, true)
 			DeleteEntity(object)
 			self.objectNet = nil
-			ClearPedTasks(PlayerPedId())
-			FreezeEntityPosition(PlayerPedId(), false)
+			local playerPed = PlayerPedId()
+			ClearPedTasks(playerPed)
+			FreezeEntityPosition(playerPed, false)
 
 			ESX.TriggerServerCallback("decreaseComservCount", function(value)
 				CommunityService:update(value)
@@ -261,12 +262,12 @@ AdminPanel = {
 
 		RegisterNUICallback("requestUsers", function(data, cb)
 			if not data.selectedTab then
-				return cb({ error = "Users not found!" })
+				return cb({ error = Translate("users_not_found") })
 			end
 
 			ESX.TriggerServerCallback("requestPunishmentUsers", function(users)
 				if not users then
-					return cb({ error = "User loading error!" })
+					return cb({ error = Translate("loading_error") })
 				end
 
 				cb({ users = users })
@@ -275,7 +276,7 @@ AdminPanel = {
 
 		RegisterNUICallback("requestUserData", function(data, cb)
 			if not data.identifier then
-				return cb({ error = "User not found!" })
+				return cb({ error = Translate("user_not_found") })
 			end
 
 			ESX.TriggerServerCallback("requestPunishmentUserData", function(error, userData)
@@ -425,32 +426,32 @@ end)
 CreateThread(function()
 	AdminPanel:init()
 	
-	TriggerEvent('chat:addSuggestion', '/punishments', 'Open Punishment List (Comserv, Jail, Ban)')
+	TriggerEvent("chat:addSuggestion", "/punishments", "Open Punishment List (Comserv, Jail, Ban)")
 
-	TriggerEvent('chat:addSuggestion', '/comserv', 'Put player to community service', {
+	TriggerEvent("chat:addSuggestion", "/comserv", "Put player to community service", {
     { name = "id", help = "Target Player ID" },
     { name = "count", help = "Tasks Count" },
     { name = "reason", help = "Reason" },
 	})
-	TriggerEvent('chat:addSuggestion', '/removecomserv', 'Remove player from community service', {
+	TriggerEvent("chat:addSuggestion", "/removecomserv", "Remove player from community service", {
     { name = "id", help = "Target Player ID" },
 	})
 
-	TriggerEvent('chat:addSuggestion', '/ban', 'Ban Player', {
+	TriggerEvent("chat:addSuggestion", "/ban", "Ban Player", {
     { name = "id", help = "Target Player ID" },
     { name = "days", help = "Days (0 - Infinity)" },
     { name = "reason", help = "Reason" },
 	})
-	TriggerEvent('chat:addSuggestion', '/unban', 'Remove player ban', {
+	TriggerEvent("chat:addSuggestion", "/unban", "Remove player ban", {
     { name = "name", help = "Identifier / Character Name" },
 	})
 
-	TriggerEvent('chat:addSuggestion', '/adminjail', 'Put player to jail', {
+	TriggerEvent("chat:addSuggestion", "/adminjail", "Put player to jail", {
     { name = "id", help = "Target Player ID" },
     { name = "minutes", help = "Minutes" },
     { name = "reason", help = "Reason" },
 	})
-	TriggerEvent('chat:addSuggestion', '/unjail', 'Remove player from jail', {
+	TriggerEvent("chat:addSuggestion", "/unjail", "Remove player from jail", {
     { name = "id", help = "Target Player ID" },
 	})
 end)
