@@ -1,4 +1,6 @@
 <script>
+  import { _ } from 'svelte-i18n';
+
   import InfoBar from './InfoBar.svelte';
 
   let comserv = false;
@@ -12,11 +14,11 @@
 
 {#if comserv && typeof comserv === 'object'}
   <main id="infopanel" class="bg-gray-700 p-2 rounded-xl select-none">
-    <div class="text-center font-bold mb-2">Community Service</div>
+    <div class="text-center font-bold mb-2">{$_('comserv')}</div>
 
-    <InfoBar title="Tasks Left" value={`${comserv.count || 'Unknown'}/${comserv.all || 'Unknown'}`} />
-    <InfoBar title="Reason" value={comserv.reason || 'Unknown'} />
-    <InfoBar title="Admin" value={comserv.admin ? comserv.admin.name : 'Unknown'} />
-    <InfoBar title="Start Date" value={formatedDate || 'Unknown'} />
+    <InfoBar title={$_('tasks_left')} value={`${comserv.count || 'Unknown'}/${comserv.all || 'Unknown'}`} />
+    <InfoBar title={$_('reason')} value={comserv.reason || 'Unknown'} />
+    <InfoBar title={$_('admin')} value={comserv.admin ? comserv.admin.name : 'Unknown'} />
+    <InfoBar title={$_('start_date')} value={formatedDate || 'Unknown'} />
   </main>
 {/if}

@@ -1,0 +1,38 @@
+{
+  "unknown": "Unknown",
+  "punishment": "Punishment",
+
+  "settings": "Settings",
+  "language": "Language",
+
+  "comserv": "Community Service",
+  "jail": "Jail",
+  "ban": "Ban",
+
+  "search_placeholder": "Search",
+  "search_result": "Search Result",
+  "users_not_found": "Users not found!",
+
+  "user_informations": "User Informations",
+  "identifier": "Identifier",
+  "char_name": "Character Name",
+  "job": "Job",
+  "money": "Money",
+  "bank_money": "Bank Money",
+  "dirt_money": "Dirty Money",
+  "admin": "Admin",
+  "admin_identifier": "Admin Identifier",
+
+  "days": "days",
+  "minutes": "minutes",
+  "infinity": "Infinity",
+
+  "count": "Count",
+  "reason": "Reason",
+  "time_left": "Time Left",
+  "all_time": "All Time",
+  "start_date": "Start Date",
+  "end_date": "End Date",
+  "elapsed": "Elapsed",
+  "tasks_left": "Tasks Left"
+}

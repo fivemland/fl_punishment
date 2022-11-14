@@ -1,11 +1,10 @@
 <script>
+  import { locale, locales, _ } from 'svelte-i18n';
+
   import Loading from './Loading.svelte';
 
-  const buttons = [
-    { name: 'comserv', label: 'Community Service' },
-    { name: 'jail', label: 'Jail' },
-    { name: 'ban', label: 'Ban' },
-  ];
+  const buttons = ['comserv', 'jail', 'ban'];
+
   let visible = false;
   let selectedTab = 'comserv';
 
@@ -13,8 +12,6 @@
   let search = '';
 
   $: filteredUsers = users.filter((user) => user.name.toLowerCase().includes(search.toLowerCase()));
-
-  $: activeTab = buttons.find((button) => button.name === selectedTab);
 
   async function selectTab(name) {
     if (selectedTab === name) return;
@@ -92,18 +89,24 @@
 
 {#if visible}
   <main class="bg-slate-700 rounded-lg w-2/5 p-2">
-    <div class="flex justify-between items-center text-xl">
-      {activeTab.label}s
+    <div class="flex justify-between items-center text-xl mb-2">
+      {$_(selectedTab)}
 
-      <button on:click={close} class="text-error">
-        <i class="fa-solid fa-xmark" />
-      </button>
+      <div class="flex gap-4 items-center">
+        <label class="text-warning text-sm" for="settings-modal">
+          <i class="fa-solid fa-gear" />
+        </label>
+
+        <button on:click={close} class="text-error">
+          <i class="fa-solid fa-xmark" />
+        </button>
+      </div>
     </div>
     <div class="flex justify-between">
       <div class="flex">
         {#each buttons as button}
-          <button on:click={() => selectTab(button.name)} class="btn btn-sm btn-info mx-1">
-            {button.label}
+          <button on:click={() => selectTab(button)} class="btn btn-sm btn-info mx-1">
+            {$_(button)}
           </button>
         {/each}
       </div>
@@ -111,8 +114,8 @@
         <input
           bind:value={search}
           disabled={users.length <= 0}
+          placeholder={$_('search_placeholder')}
           type="text"
-          placeholder="Search"
           class="input input-bordered input-sm w-full"
         />
       </div>
@@ -121,34 +124,35 @@
     <div class="max-h-96 overflow-y-auto">
       {#if search.length > 0 && filteredUsers.length <= 0}
         <div class="text-center text-warning text-lg mt-4">
-          Search result:
+          {$_('search_result')}
           <br />
-          Users not found!
+          {$_('users_not_found')}
         </div>
       {/if}
 
       {#if users.length <= 0}
-        <div class="text-center text-warning text-lg mt-4">Users not found!</div>
+        <div class="text-center text-warning text-lg mt-4">{$_('users_not_found')}</div>
       {:else}
         {#each filteredUsers as user}
           {#if user}
             <div class="grid grid-flow-col gap-2 items-center bg-slate-800 p-2 rounded-md border-b border-gray-900">
-              <div class="w-40">{user.name || 'Ismeretlen'}</div>
+              <div class="w-40">{user.name || $_('unknown')}</div>
               <div class="w-60 text-center">
-                <div class="tooltip tooltip-left" data-tip="Reason">
-                  {user[selectedTab].reason || 'Unknown'}
+                <div class="tooltip tooltip-left" data-tip={$_('reason')}>
+                  {user[selectedTab].reason || $_('unknown')}
                 </div>
               </div>
               <div>
-                <div class="tooltip tooltip-right" data-tip="Count">
+                <div class="tooltip tooltip-right" data-tip={$_('count')}>
                   {#if selectedTab === 'ban'}
-                    {parseInt(user[selectedTab].count || 0) === 0 ? 'Infinity' : user[selectedTab].count + ' days'}
+                    {parseInt(user[selectedTab].count || 0) === 0 ? $_('infinity') : user[selectedTab].count + ' ' + $_('days')}
                   {:else}
-                    {user[selectedTab].count || 0}/{user[selectedTab].all || 0}{selectedTab === 'jail' ? ' minutes' : ''}
+                    {user[selectedTab].count || 0}/{user[selectedTab].all || 0}{selectedTab === 'jail' ? ' ' + $_('minutes') : ''}
                   {/if}
                 </div>
               </div>
               <div class="ml-auto">
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <label on:click={() => requestUserData(user)} class="btn btn-sm btn-circle btn-primary modal-button" for="info-modal">
                   <i class="fa-solid fa-info" />
                 </label>
@@ -168,10 +172,11 @@
 <input type="checkbox" id="info-modal" class="modal-toggle" />
 <div class="modal">
   <div class="modal-box bg-gray-800">
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <label on:click={(userInfo = false)} for="info-modal" class="btn btn-sm btn-circle absolute right-2 top-2">
       <i class="fa-solid fa-xmark" />
     </label>
-    <h3 class="font-bold text-lg">User Informations</h3>
+    <h3 class="font-bold text-lg">{$_('user_informations')}</h3>
 
     {#if userInfo === undefined || userInfo === false}
       <div class="text-center">
@@ -183,66 +188,66 @@
       <table class="table table-compact w-full mt-3 py-4">
         <tbody>
           <tr>
-            <td colspan="2" class="font-bold text-center"> User Informations </td>
+            <td colspan="2" class="font-bold text-center">{$_('user_informations')}</td>
           </tr>
 
           <tr>
-            <td>Identifier</td>
+            <td>{$_('identifier')}</td>
             <td class="text-right">{userInfo.identifier || 'Unknown'}</td>
           </tr>
           <tr>
-            <td>Character Name</td>
+            <td>{$_('char_name')}</td>
             <td class="text-right">{userInfo.firstname || 'Unknown'} {userInfo.lastname || 'Unknown'}</td>
           </tr>
           <tr>
-            <td>Job</td>
+            <td>{$_('job')}</td>
             <td class="text-right">{userInfo.job || 'Unknown'}</td>
           </tr>
           <tr>
-            <td>Money</td>
+            <td>{$_('money')}</td>
             <td class="text-right">{userInfo.accounts.money}$</td>
           </tr>
           <tr>
-            <td>Bank Money</td>
+            <td>{$_('bank_money')}</td>
             <td class="text-right">{userInfo.accounts.bank}$</td>
           </tr>
           <tr>
-            <td>Dirt Money</td>
+            <td>{$_('dirt_money')}</td>
             <td class="text-right">{userInfo.accounts.black_money}$</td>
           </tr>
 
           <tr>
-            <td colspan="2" class="font-bold text-center"> Punishment </td>
+            <td colspan="2" class="font-bold text-center">{$_('punishment')}</td>
           </tr>
           {#if userInfo[selectedTab]}
             <tr>
-              <td>Admin</td>
+              <td>{$_('admin')}</td>
               <td class="text-right">{userInfo[selectedTab].admin.name}</td>
             </tr>
             <tr>
-              <td>Admin Identifier</td>
+              <td>{$_('admin_identifier')}</td>
               <td class="text-right">{userInfo[selectedTab].admin.identifier}</td>
             </tr>
             <tr>
-              <td>Start Date</td>
+              <td>{$_('start_date')}</td>
               <td class="text-right">{formatDate(userInfo[selectedTab].start)}</td>
             </tr>
             {#if selectedTab === 'ban'}
               <tr>
-                <td>End Date</td>
+                <td>{$_('end_date')}</td>
                 <td class="text-right">{formatDate(userInfo[selectedTab].endDate)}</td>
               </tr>
               <tr>
-                <td>Days</td>
+                <td>{$_('days')}</td>
                 <td class="text-right">{userInfo[selectedTab].count}</td>
               </tr>
             {:else if selectedTab === 'jail'}
               <tr>
-                <td>Elapsed</td>
+                <td>{$_('elapsed')}</td>
                 <td class="text-right">{userInfo[selectedTab].count} minutes</td>
               </tr>
               <tr>
-                <td>All Time</td>
+                <td>{$_('all_time')}</td>
                 <td class="text-right">{userInfo[selectedTab].all} minutes</td>
               </tr>
             {/if}
@@ -250,6 +255,26 @@
         </tbody>
       </table>
     {/if}
+  </div>
+</div>
+
+<input type="checkbox" id="settings-modal" class="modal-toggle" />
+<div class="modal">
+  <div class="modal-box bg-gray-800">
+    <label for="settings-modal" class="btn btn-sm btn-circle absolute right-2 top-2">
+      <i class="fa-solid fa-xmark" />
+    </label>
+    <h3 class="font-bold text-lg mb-3">{$_('settings')}</h3>
+
+    <div class="w-full grid grid-cols-2 items-center">
+      {$_('language')}
+      <!-- <select on:change={({ target }) => locale.set(target.value)} class="select select-bordered select-sm w-full max-w-xs"> -->
+      <select on:change={({ target }) => locale.set(target.value)} class="select select-bordered select-sm w-full max-w-xs">
+        {#each $locales as _locale}
+          <option selected={$locale == _locale} value={_locale}>{_locale}</option>
+        {/each}
+      </select>
+    </div>
   </div>
 </div>
 

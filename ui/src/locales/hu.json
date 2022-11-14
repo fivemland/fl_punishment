@@ -1,0 +1,38 @@
+{
+  "unknown": "Ismeretlen",
+  "punishment": "Büntetés",
+
+  "settings": "Beállítások",
+  "language": "Nyelv",
+
+  "comserv": "Közmunka",
+  "jail": "Börtön",
+  "ban": "Kitiltás",
+
+  "search_placeholder": "Keresés",
+  "search_result": "Keresés eredménye",
+  "users_not_found": "Játékos nem található",
+
+  "user_informations": "Játékos információk",
+  "identifier": "Identifier",
+  "char_name": "Karakter név",
+  "job": "Munka",
+  "money": "Készpénz",
+  "bank_money": "Banki egyenleg",
+  "dirt_money": "Piszkos pénz",
+  "admin": "Admin",
+  "admin_identifier": "Admin Identifier",
+
+  "days": "napok",
+  "minutes": "percek",
+  "infinity": "Végtelen",
+
+  "count": "Egység",
+  "reason": "Indok",
+  "time_left": "Hátralévő idő",
+  "all_time": "Összes idő",
+  "start_date": "Kezdés dátuma",
+  "end_date": "Befejezés dátuma",
+  "elapsed": "Eltelt",
+  "tasks_left": "Hátralévő feladatok"
+}
