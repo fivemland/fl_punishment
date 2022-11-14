@@ -68,5 +68,9 @@ Locales.hu = {
   removed_from_jail = "%s kivett téged a börtönből",
   unjail_log = [[
     **%s** kivette **%s** *(%s)* játékost a börtönből
-  ]]
+  ]],
+  count_invalid = "Egység érvénytelen",
+  adminjail_over = "Börtön idő letelt.",
+  not_admin = "Nem vagy admin!",
+  removed_punishment = "Büntetésed eltávolítva."
 }

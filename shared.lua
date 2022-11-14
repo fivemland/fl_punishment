@@ -71,7 +71,7 @@ function isAdmin(xPlayer)
 	local permissions = ADMIN_RANKS[xPlayer.getGroup()]
 
 	if not permissions then
-		output("You have not permissions!", xPlayer.source)
+		output(Translate("not_admin"), xPlayer.source)
 	end
 
 	return permissions

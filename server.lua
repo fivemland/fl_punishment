@@ -140,7 +140,7 @@ ESX.RegisterServerCallback("increaseAdminJailTime", function(player, cb)
 	if jail.count >= (jail.all or 0) then
 		jail = nil
 
-		output("Admin jail is over.", player)
+		output(Translate("adminjail_over"), player)
 	end
 
 	MySQL.query("UPDATE users SET jail = ? WHERE identifier = ?", {
@@ -177,7 +177,7 @@ ESX.RegisterServerCallback("removeUserFromPunishment", function(player, cb, sele
 		end
 	end
 
-	output("You removed punishment.", player)
+	output(Translate("removed_punishment"), player)
 
 	cb(getPunishmentUsers(selectedTab))
 end)
@@ -185,7 +185,7 @@ end)
 ESX.RegisterServerCallback("requestPunishmentUserData", function(player, cb, selectedTab, identifier)
 	local xPlayer = ESX.GetPlayerFromId(player)
 	if not xPlayer or not ADMIN_RANKS[xPlayer.getGroup()] then
-		return cb("You are not an admin!")
+		return cb(Translate("not_admin"))
 	end
 
 	local result = MySQL.query.await(
@@ -194,7 +194,7 @@ ESX.RegisterServerCallback("requestPunishmentUserData", function(player, cb, sel
 	)
 
 	if not result or #result <= 0 then
-		return cb("User not found!")
+		return cb(Translate("user_not_found"))
 	end
 
 	cb(_, result[1])
@@ -225,7 +225,7 @@ RegisterCommand("comserv", function(player, args)
 
 	local count = tonumber(args[2])
 	if not count or count <= 0 then
-		return output("Count is invalid!", player)
+		return output(Translate("count_invalid"), player)
 	end
 	count = math.abs(math.floor(count))
 

@@ -68,5 +68,9 @@ Locales.en = {
   removed_from_jail = "%s has removed you from adminjail",
   unjail_log = [[
     **%s** removed **%s** *(%s)* from admin jail
-  ]]
+  ]],
+  count_invalid = "Count is invalid!",
+  adminjail_over = "Admin jail is over.",
+  not_admin = "You are not an admin!",
+  removed_punishment = "You removed punishment."
 }
