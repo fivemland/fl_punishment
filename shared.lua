@@ -1,3 +1,5 @@
+LOCALE = GetConvar('esx:locale', 'en')
+
 COMSERV = {
 	coords = vector3(168.528, -978.9825, 30.09193),
 	radius = 50,

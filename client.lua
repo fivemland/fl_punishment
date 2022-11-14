@@ -1,3 +1,7 @@
+RegisterNUICallback("getLocale", function(_, cb)
+	cb({locale = LOCALE})
+end)
+
 CommunityService = {
 	value = false,
 	radiusBlip = nil,
