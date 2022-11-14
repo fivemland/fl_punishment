@@ -197,7 +197,7 @@ ESX.RegisterServerCallback("requestPunishmentUserData", function(player, cb, sel
 		return cb(Translate("user_not_found"))
 	end
 
-	cb(_, result[1])
+	cb(false, result[1])
 end)
 
 RegisterCommand("punishments", function(player)
