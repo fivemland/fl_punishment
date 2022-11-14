@@ -268,7 +268,6 @@
 
     <div class="w-full grid grid-cols-2 items-center">
       {$_('language')}
-      <!-- <select on:change={({ target }) => locale.set(target.value)} class="select select-bordered select-sm w-full max-w-xs"> -->
       <select on:change={({ target }) => locale.set(target.value)} class="select select-bordered select-sm w-full max-w-xs">
         {#each $locales as _locale}
           <option selected={$locale == _locale} value={_locale}>{_locale}</option>
