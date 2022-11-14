@@ -37,7 +37,7 @@ ADMIN_RANKS = {
 }
 
 -- WEBHOOK = false --discord log is disabled
-WEBHOOK = "https://discord.com/api/webhooks/1041807336072806530/qapBJDXwITlVQO_sPfQbo2qlbLX3o9bFhsDd-KhWB1YTeJ0IVIM53LVAYzDn7YFQlnzG" --your webhook here
+WEBHOOK = "" --your webhook here
 
 function output(text, target)
 	if IsDuplicityVersion() then --Server Side
