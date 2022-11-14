@@ -1,5 +1,5 @@
 Config = {
-	Locale = GetConvar("esx:locale", "hu")
+	Locale = GetConvar("esx:locale", "en")
 }
 if not Translate then Translate = _ end
 
