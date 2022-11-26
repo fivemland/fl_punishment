@@ -114,7 +114,10 @@ ESX.RegisterServerCallback("decreaseComservCount", function(player, cb)
 
 	comserv.count = (comserv.count or comserv.all or 0) - 1
 	if comserv.count <= 0 then
-		comserv = nil
+		comserv = nil	
+		if COMSERV.outCoords.Enable then
+			xPlayer.setCoords(COMSERV.outCoords.Coords)
+		end
 	end
 
 	MySQL.query("UPDATE users SET comserv = ? WHERE identifier = ?", {
