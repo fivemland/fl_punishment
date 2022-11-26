@@ -4,6 +4,10 @@ Config = {
 if not Translate then Translate = _ end
 
 COMSERV = {
+	outCoords = {
+		Enable = true,
+		Coords = vector3(156.8522, -992.6871, 29.3590),
+	},
 	coords = vector3(168.528, -978.9825, 30.09193),
 	radius = 50,
 
