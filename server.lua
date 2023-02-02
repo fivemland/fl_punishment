@@ -314,7 +314,7 @@ function banPlayer(admin, target, days, reason)
 	target = (type(target) == "number" or type(target) == "string") and ESX.GetPlayerFromId(target) or target
 
 	if not isAdmin(admin) then
-		print(("%s try ban player %s"):format(admin.getName(), target.getName()))
+		Citizen.Trace(("%s (%s) try ban player %s\n"):format(admin.getName(), admin.identifier, target.getName()))
 		return false
 	end
 
