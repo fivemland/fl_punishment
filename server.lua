@@ -12,6 +12,7 @@ local function createSQLColumn(name)
 			ALTER TABLE `users`
 			ADD COLUMN %s TEXT NULL DEFAULT "";
 		]]):format(name), function()
+		Citizen.Trace(("[INFO]: New SQL column created. Name: %s\n"):format(name))
 		p:resolve(true)
 	end)
 
