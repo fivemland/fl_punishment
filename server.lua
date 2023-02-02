@@ -22,7 +22,7 @@ local function loadPlayerPunishment(player, xPlayer)
 	local result = MySQL.single.await("SELECT comserv, jail FROM users WHERE identifier = ?", { xPlayer.identifier })
 
 	for key, row in pairs(result) do 
-		if (row or ""):len() > 0 then 
+		if type(row) == "string" and (row or ""):len() > 0 then 
 			row = json.decode(row)
 			TriggerClientEvent("updatePlayerPunishment", player, key, row)
 			return
@@ -75,7 +75,7 @@ function getPlayerPunishment(xPlayer, name)
 	end
 
 	local result = MySQL.scalar.await("SELECT ?? FROM users WHERE identifier = ?", { name, xPlayer.identifier })
-	if (result or ""):len() <= 0 then
+	if type(result) ~= "string" or (result or ""):len() <= 0 then
 		return false
 	end
 
