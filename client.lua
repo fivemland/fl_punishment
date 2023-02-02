@@ -297,6 +297,7 @@ Jail = {
 
 	update = function(self, data, isLogin)
 		if isLogin then 
+			self.data = false
 			SendNUIMessage({ jail = false })
 			return
 		end
@@ -420,6 +421,10 @@ RegisterNetEvent("updatePlayerPunishment", function(name, data)
 	elseif name == "jail" then 
 		Jail:update(data)
 	end
+end)
+
+RegisterNetEvent("esx:onPlayerLogout", function()
+	TriggerEvent("updatePlayerPunishment", "clear")
 end)
 
 -- Add chat suggestions

@@ -22,9 +22,8 @@ local function loadPlayerPunishment(player, xPlayer)
 	local result = MySQL.single.await("SELECT comserv, jail FROM users WHERE identifier = ?", { xPlayer.identifier })
 
 	for key, row in pairs(result) do 
-		row = json.decode(row)
-
-		if row then 
+		if (row or ""):len() > 0 then 
+			row = json.decode(row)
 			TriggerClientEvent("updatePlayerPunishment", player, key, row)
 			return
 		end
@@ -58,8 +57,11 @@ CreateThread(function()
 	Citizen.Await(createSQLColumn("jail"))
 	Citizen.Await(createSQLColumn("ban"))
 
-	for _, xPlayer in pairs(ESX.GetExtendedPlayers()) do
-		loadPlayerPunishment(xPlayer.source, xPlayer)
+	for _, player in pairs(GetPlayers()) do
+		local xPlayer = ESX.GetPlayerFromId(player)
+		if xPlayer then
+			loadPlayerPunishment(player, xPlayer)
+		end
 	end
 end)
 
@@ -73,7 +75,7 @@ function getPlayerPunishment(xPlayer, name)
 	end
 
 	local result = MySQL.scalar.await("SELECT ?? FROM users WHERE identifier = ?", { name, xPlayer.identifier })
-	if not result or result:len() <= 0 then
+	if (result or ""):len() <= 0 then
 		return false
 	end
 
@@ -311,7 +313,7 @@ function banPlayer(admin, target, days, reason)
 	admin = (type(admin) == "number" or type(admin) == "string") and ESX.GetPlayerFromId(admin) or admin
 	target = (type(target) == "number" or type(target) == "string") and ESX.GetPlayerFromId(target) or target
 
-	if not isAdmin(admin) then 
+	if not isAdmin(admin) then
 		print(("%s try ban player %s"):format(admin.getName(), target.getName()))
 		return false
 	end
