@@ -114,8 +114,10 @@ CommunityService = {
 				local distance = #(playerCoords - self.marker)
 				if distance <= (COMSERV.marker.size or 1) then
 					ESX.ShowHelpNotification(Translate("work_help"))
-					if IsControlJustPressed(0, 38) then
-						self:startTaskProcess()
+          if IsControlJustPressed(0, 38) then
+						CreateThread(function()
+							self:startTaskProcess()
+						end)
 					end
 				end
 
@@ -169,6 +171,7 @@ CommunityService = {
 		local playerPed = PlayerPedId()
 		local playerCoords = GetEntityCoords(playerPed)
 
+    ESX.Streaming.RequestModel(COMSERV.model)
 		local object = CreateObject(COMSERV.model, playerCoords - vector3(0, 0, 3), true, true, true)
 		self.objectNet = ObjToNet(object)
 		FreezeEntityPosition(playerPed, true)
@@ -207,7 +210,16 @@ CommunityService = {
 		end)
 
 		CreateThread(function()
-			Wait(10000)
+      Wait(10000)
+			
+			local playerPed = PlayerPedId()
+			ClearPedTasks(playerPed)
+			FreezeEntityPosition(playerPed, false)
+
+			ESX.TriggerServerCallback("decreaseComservCount", function(value)
+				CommunityService:update(value)
+			end)
+
 			local object = NetToObj(self.objectNet)
 			if not DoesEntityExist(object) then
 				return
@@ -216,13 +228,6 @@ CommunityService = {
 			DetachEntity(object, true, true)
 			DeleteEntity(object)
 			self.objectNet = nil
-			local playerPed = PlayerPedId()
-			ClearPedTasks(playerPed)
-			FreezeEntityPosition(playerPed, false)
-
-			ESX.TriggerServerCallback("decreaseComservCount", function(value)
-				CommunityService:update(value)
-			end)
 		end)
 	end,
 
