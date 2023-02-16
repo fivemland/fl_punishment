@@ -35,6 +35,7 @@ Locales.hu = {
     Indok: %s
   ]],
   invalid_days = "Napok értéke érvénytelen!",
+  already_banned = "Játékos már tiltva van a szerverről. (%s)",
   no_reason = "Nincs indok",
   you_banned = "Kitiltottad a játékost, %s",
   days = "Napok: %s",

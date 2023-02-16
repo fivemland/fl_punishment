@@ -35,6 +35,7 @@ Locales.en = {
     Reason: %s
   ]],
   invalid_days = "Days value invalid!",
+  already_banned = "Player already banned. (%s)",
   no_reason = "No reason",
   you_banned = "You banned the player, %s",
   days = "Days: %s",

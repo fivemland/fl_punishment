@@ -388,6 +388,84 @@ RegisterCommand("ban", function(player, args)
 	output(Translate("reason", reason), player)
 end)
 
+RegisterCommand("offlineban", function(player, args)
+	local xPlayer = ESX.GetPlayerFromId(player)
+	if not xPlayer or not isAdmin(xPlayer) then
+		return
+	end
+
+	if #args < 2 then
+		return output(Translate("invalid_syntax"), player)
+	end
+
+	local days = tonumber(args[2])
+	if not days or days < 0 then
+		return output(Translate("invalid_days"), player)
+	end
+	days = math.floor(days)
+
+	local identifier = tostring(args[1])
+	if identifier:len() <= 20 then
+		return output(Translate("invalid_syntax"), player)
+	end
+
+	table.remove(args, 1)
+	table.remove(args, 1)
+
+	local reason = table.concat(args, " ")
+	if reason:len() <= 0 then
+		reason = Translate("no_reason")
+	end
+
+	local users = MySQL.query.await("SELECT identifier, ban FROM users WHERE SUBSTRING_INDEX(identifier, ':', -1) = ?", {identifier})
+
+	if not users or #users <= 0 then
+		return output(Translate("user_not_found"), player)
+	end
+
+	local admin = ESX.GetPlayerFromId(player)
+	local currentTimestamp = os.time(os.date("!*t"))
+	local adminName = GetPlayerName(admin.source)
+	local ban = {
+		count = days,
+		start = currentTimestamp,
+		endDate = currentTimestamp + ((days == 0 and 3650 or days) * DAY_SECONDS),
+		reason = reason,
+		admin = {
+			name = adminName,
+			identifier = admin.identifier,
+		},
+	}
+
+	local queries = {}
+	for _, user in pairs(users) do
+		if tostring(user.ban or ""):len() > 0 then
+			return output(Translate("already_banned", identifier), player)
+		end
+
+		CreateThread(function()
+			local xTarget = ESX.GetPlayerFromIdentifier(user.identifier)
+			if xTarget then
+				DropPlayer(
+					xTarget.source,
+					Translate("ban_message", adminName, days == 0 and Translate("infinity") or days, reason)
+				)
+			end
+		end)
+		table.insert(queries, {query = "UPDATE users SET ban = ? WHERE identifier = ?", values = {json.encode(ban), user.identifier}})
+	end
+
+	MySQL.transaction(queries, function(success)
+		if not success then
+			return
+		end
+
+		output(Translate("you_banned", identifier), player)
+		output(Translate("days", days == 0 and Translate("infinity") or days), player)
+		output(Translate("reason", reason), player)
+	end)
+end)
+
 AddEventHandler("playerConnecting", function(name, setKickReason, deferrals)
 	local player = source
 	local identifiers = GetPlayerIdentifiers(player)
@@ -443,7 +521,7 @@ AddEventHandler("playerConnecting", function(name, setKickReason, deferrals)
 
 		deferrals.update(Translate("ban_clear"))
 
-		exports.oxmysql:update("UPDATE users SET ban = '' WHERE identifier = ?", { selectedId })
+		exports.oxmysql:update("UPDATE users SET ban = '' WHERE SUBSTRING_INDEX(identifier, ':', -1) = ?", { selectedId })
 	end
 
 	Wait(1000)

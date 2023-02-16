@@ -452,6 +452,11 @@ CreateThread(function()
     { name = "days", help = "Days (0 - Infinity)" },
     { name = "reason", help = "Reason" },
 	})
+	TriggerEvent("chat:addSuggestion", "/offlineban", "Offline Ban Player", {
+    { name = "identifier", help = "Target Identifier" },
+    { name = "days", help = "Days (0 - Infinity)" },
+    { name = "reason", help = "Reason" },
+	})
 	TriggerEvent("chat:addSuggestion", "/unban", "Remove player ban", {
     { name = "name", help = "Identifier / Character Name" },
 	})
