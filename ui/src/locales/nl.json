@@ -1,0 +1,38 @@
+{
+    "unknown": "Onbekend",
+    "punishment": "Straf",
+  
+    "settings": "Instellingen",
+    "language": "Taal",
+  
+    "comserv": "Taakstraf",
+    "jail": "Gevangenis",
+    "ban": "Verbannen",
+  
+    "search_placeholder": "Zoeken",
+    "search_result": "Zoekresultaat",
+    "users_not_found": "Geen gebruikers gevonden!",
+  
+    "user_informations": "Gebruikersinformatie",
+    "identifier": "Identificatie",
+    "char_name": "Karakternaam",
+    "job": "Baan",
+    "money": "Geld",
+    "bank_money": "Bankrekening",
+    "dirt_money": "Zwart geld",
+    "admin": "Admin",
+    "admin_identifier": "Admin Identificatie",
+  
+    "days": "dagen",
+    "minutes": "minuten",
+    "infinity": "Oneindig",
+  
+    "count": "Aantal",
+    "reason": "Reden",
+    "time_left": "Resterende tijd",
+    "all_time": "Totale tijd",
+    "start_date": "Startdatum",
+    "end_date": "Einddatum",
+    "elapsed": "Verstreken",
+    "tasks_left": "Taken over"
+}
